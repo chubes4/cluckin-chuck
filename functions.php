@@ -1,9 +1,8 @@
 <?php
 /**
- * Cluckin Chuck Theme Functions
+ * Block theme setup and stylesheet enqueue
  *
  * @package CluckinChuck
- * @since 1.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

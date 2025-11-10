@@ -131,7 +131,11 @@ All templates are HTML files using WordPress block markup. Edit them in:
 This theme is designed to work with the Wing Map plugin, which provides:
 - `wing_location` custom post type
 - `wing-map/map-display` block for interactive maps
+- `wing-map/wing-review` block for displaying user-submitted reviews
 - Wing location metadata (address, coordinates, ratings)
+- User review submission and moderation system
+
+The theme displays reviews embedded in wing location posts as `wing-map/wing-review` blocks, which are automatically generated from approved user comments.
 
 **Note:** The theme will work without the plugin, but wing location functionality requires the plugin to be active.
 

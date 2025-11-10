@@ -18,6 +18,91 @@ Text Domain: cluckin-chuck
  * Most styling is handled via theme.json, these are supplemental styles
  */
 
+/* ===================================
+   CSS Reset
+   =================================== */
+
+/* Box sizing reset */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Remove default margin and padding */
+* {
+	margin: 0;
+	padding: 0;
+}
+
+/* Full bleed body */
+html,
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+
+/* Remove list styles */
+ul,
+ol {
+	list-style: none;
+}
+
+/* Reset form elements */
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+}
+
+/* Normalize images */
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+/* Remove button styling */
+button {
+	cursor: pointer;
+	background: none;
+	border: none;
+	padding: 0;
+}
+
+/* Inherit typography for inputs and buttons */
+input,
+button,
+textarea,
+select {
+	font: inherit;
+}
+
+/* Normalize line height */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+/* ===================================
+   CSS Variables
+   =================================== */
+
 :root {
 	--wing-sauce-orange: #d35400;
 	--wing-sauce-light: #e67e22;
@@ -26,12 +111,18 @@ Text Domain: cluckin-chuck
 	--dark-text: #2c1810;
 }
 
+/* ===================================
+   Body Styles
+   =================================== */
+
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility classes */
+/* ===================================
+   Utility Classes
+   =================================== */
 .wing-sauce-color {
 	color: var(--wing-sauce-orange);
 }
@@ -44,7 +135,10 @@ body {
 	text-align: center;
 }
 
-/* Wing-specific styling */
+/* ===================================
+   Wing-Specific Styles
+   =================================== */
+
 .wing-rating {
 	color: var(--golden-crispy);
 	font-size: 1.2em;

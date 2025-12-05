@@ -1,0 +1,268 @@
+/**
+ * Wing Review Block - Editor Styles
+ */
+
+.wing-review-editor {
+	border: 2px solid #d35400;
+	border-radius: 8px;
+	padding: 24px;
+	background: #fff;
+	margin: 20px 0;
+
+	.wing-review-editor-header {
+		margin: 0 0 20px 0;
+		padding-bottom: 12px;
+		border-bottom: 2px solid #f0f0f0;
+
+		h4 {
+			margin: 0;
+			color: #d35400;
+			font-size: 18px;
+			font-weight: 600;
+		}
+	}
+
+	.wing-review-author-section {
+		margin-bottom: 24px;
+		padding: 16px;
+		background: #f8f9fa;
+		border-radius: 4px;
+		border-left: 4px solid #d35400;
+
+		.wing-author-info {
+			margin: 0 0 8px 0;
+			font-size: 14px;
+			color: #1e1e1e;
+
+			strong {
+				color: #d35400;
+			}
+
+			.wing-author-email {
+				color: #757575;
+				font-size: 13px;
+			}
+		}
+
+		.wing-help-text {
+			margin: 0;
+			font-size: 12px;
+			color: #757575;
+			font-style: italic;
+		}
+	}
+
+	.wing-ratings-section {
+		margin-bottom: 24px;
+
+		h5 {
+			margin: 0 0 16px 0;
+			font-size: 16px;
+			font-weight: 600;
+			color: #2c1810;
+		}
+
+		.wing-rating-field {
+			margin-bottom: 16px;
+
+			label {
+				display: block;
+				margin-bottom: 8px;
+				font-weight: 500;
+				color: #2c1810;
+				font-size: 14px;
+
+				.required {
+					color: #d94f4f;
+				}
+			}
+
+			.wing-rating-input-group {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+
+				.components-base-control {
+					margin-bottom: 0;
+					flex: 0 0 80px;
+				}
+
+				.components-text-control__input {
+					width: 80px;
+					padding: 6px 12px;
+					font-size: 14px;
+				}
+
+				.wing-star-preview {
+					font-size: 20px;
+					color: #d35400;
+					letter-spacing: 2px;
+					line-height: 1;
+				}
+			}
+		}
+	}
+
+	.wing-review-text-section {
+		margin-bottom: 24px;
+
+		label {
+			display: block;
+			margin-bottom: 8px;
+			font-weight: 500;
+			color: #2c1810;
+			font-size: 14px;
+
+			.required {
+				color: #d94f4f;
+			}
+		}
+
+		.components-textarea-control__input {
+			width: 100%;
+			padding: 12px;
+			font-size: 14px;
+			line-height: 1.6;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+
+			&:focus {
+				border-color: #d35400;
+				outline: none;
+				box-shadow: 0 0 0 1px #d35400;
+			}
+		}
+	}
+
+	.wing-location-section {
+		margin-top: 32px;
+		padding-top: 24px;
+		border-top: 2px solid #f0f0f0;
+
+		h5 {
+			margin: 0 0 8px 0;
+			font-size: 16px;
+			font-weight: 600;
+			color: #2c1810;
+		}
+
+		.wing-help-text {
+			margin: 0 0 20px 0;
+			font-size: 13px;
+			color: #757575;
+			font-style: italic;
+			padding: 12px;
+			background: #fef5e7;
+			border-left: 3px solid #d35400;
+			border-radius: 4px;
+		}
+
+		.components-base-control {
+			margin-bottom: 16px;
+
+			.components-base-control__label {
+				font-weight: 500;
+				color: #2c1810;
+				font-size: 14px;
+				margin-bottom: 8px;
+			}
+
+			.components-text-control__input,
+			.components-textarea-control__input,
+			.components-select-control__input {
+				width: 100%;
+				padding: 8px 12px;
+				font-size: 14px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+
+				&:focus {
+					border-color: #d35400;
+					outline: none;
+					box-shadow: 0 0 0 1px #d35400;
+				}
+			}
+		}
+
+		.wing-coordinates-readonly {
+			margin-bottom: 16px;
+			padding: 12px;
+			background: #f8f9fa;
+			border-radius: 4px;
+			font-size: 13px;
+			color: #4f4f4f;
+
+			strong {
+				color: #2c1810;
+			}
+
+			.wing-no-coords {
+				color: #757575;
+				font-style: italic;
+			}
+		}
+
+		.wing-contact-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px;
+			margin-bottom: 16px;
+
+			@media (max-width: 782px) {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.wing-services-section {
+			margin-top: 20px;
+
+			> label {
+				display: block;
+				margin-bottom: 12px;
+				font-weight: 500;
+				color: #2c1810;
+				font-size: 14px;
+			}
+
+			.wing-services-toggles {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px;
+				padding: 16px;
+				background: #f8f9fa;
+				border-radius: 4px;
+
+				.components-toggle-control {
+					margin-bottom: 0;
+					flex: 0 0 auto;
+				}
+			}
+		}
+	}
+
+	.wing-not-first-notice {
+		margin-top: 24px;
+		padding: 16px;
+		background: #e3f2fd;
+		border-left: 4px solid #2196f3;
+		border-radius: 4px;
+
+		p {
+			margin: 0;
+			font-size: 14px;
+			color: #1565c0;
+			font-weight: 500;
+		}
+	}
+
+	.components-base-control__help {
+		font-size: 12px;
+		color: #757575;
+		margin-top: 6px;
+	}
+
+	.required {
+		color: #d94f4f;
+		font-weight: 700;
+	}
+}

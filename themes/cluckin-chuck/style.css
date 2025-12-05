@@ -1,0 +1,151 @@
+/*
+Theme Name: Cluckin Chuck
+Theme URI: https://chubes.net
+Author: Chris Huber
+Author URI: https://chubes.net
+Description: A block theme dedicated to showcasing chicken wing locations across the USA
+Version: 0.1.0
+Requires at least: 6.0
+Tested up to: 6.4
+Requires PHP: 8.0
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: cluckin-chuck
+*/
+
+/**
+ * Global styles for Cluckin Chuck theme
+ * Most styling is handled via theme.json, these are supplemental styles
+ */
+
+/* ===================================
+   CSS Reset
+   =================================== */
+
+/* Box sizing reset */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+/* Remove default margin and padding */
+* {
+	margin: 0;
+	padding: 0;
+}
+
+/* Full bleed body */
+html,
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+}
+
+/* Remove list styles */
+ul,
+ol {
+	list-style: none;
+}
+
+/* Reset form elements */
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+}
+
+/* Normalize images */
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+/* Remove button styling */
+button {
+	cursor: pointer;
+	background: none;
+	border: none;
+	padding: 0;
+}
+
+/* Inherit typography for inputs and buttons */
+input,
+button,
+textarea,
+select {
+	font: inherit;
+}
+
+/* Normalize line height */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	overflow-wrap: break-word;
+}
+
+/* ===================================
+   CSS Variables
+   =================================== */
+
+:root {
+	--wing-sauce-orange: #d35400;
+	--wing-sauce-light: #e67e22;
+	--golden-crispy: #f39c12;
+	--cream-bg: #fdf6e3;
+	--dark-text: #2c1810;
+}
+
+/* ===================================
+   Body Styles
+   =================================== */
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ===================================
+   Utility Classes
+   =================================== */
+.wing-sauce-color {
+	color: var(--wing-sauce-orange);
+}
+
+.golden-color {
+	color: var(--golden-crispy);
+}
+
+.text-center {
+	text-align: center;
+}
+
+/* ===================================
+   Wing-Specific Styles
+   =================================== */
+
+.wing-rating {
+	color: var(--golden-crispy);
+	font-size: 1.2em;
+}
+
+.wing-meta-label {
+	font-weight: 600;
+	color: var(--dark-text);
+	margin-right: 0.5rem;
+}

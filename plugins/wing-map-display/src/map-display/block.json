@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wing-map/map-display",
+	"title": "Wing Map Display",
+	"category": "widgets",
+	"icon": "location-alt",
+	"description": "Displays an interactive map showing all wing locations with reviews",
+	"keywords": ["map", "wings", "locations", "leaflet"],
+	"textdomain": "wing-map-display",
+	"supports": {
+		"html": false,
+		"multiple": false
+	},
+	"attributes": {},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css",
+	"viewScript": "file:./frontend.js"
+}

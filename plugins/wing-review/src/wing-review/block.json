@@ -1,0 +1,86 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wing-map/wing-review",
+	"title": "Wing Review",
+	"category": "widgets",
+	"icon": "star-filled",
+	"description": "Displays a wing location review with ratings and location details",
+	"keywords": ["review", "wings", "rating", "restaurant"],
+	"textdomain": "wing-review",
+	"supports": {
+		"html": false
+	},
+	"attributes": {
+		"reviewerName": {
+			"type": "string",
+			"default": ""
+		},
+		"reviewerEmail": {
+			"type": "string",
+			"default": ""
+		},
+		"rating": {
+			"type": "number",
+			"default": 0
+		},
+		"sauceRating": {
+			"type": "number",
+			"default": 0
+		},
+		"crispinessRating": {
+			"type": "number",
+			"default": 0
+		},
+		"reviewText": {
+			"type": "string",
+			"default": ""
+		},
+		"timestamp": {
+			"type": "string",
+			"default": ""
+		},
+		"address": {
+			"type": "string",
+			"default": ""
+		},
+		"latitude": {
+			"type": "number",
+			"default": 0
+		},
+		"longitude": {
+			"type": "number",
+			"default": 0
+		},
+		"phone": {
+			"type": "string",
+			"default": ""
+		},
+		"website": {
+			"type": "string",
+			"default": ""
+		},
+		"hours": {
+			"type": "string",
+			"default": ""
+		},
+		"priceRange": {
+			"type": "string",
+			"default": ""
+		},
+		"takeout": {
+			"type": "boolean",
+			"default": false
+		},
+		"delivery": {
+			"type": "boolean",
+			"default": false
+		},
+		"dineIn": {
+			"type": "boolean",
+			"default": false
+		}
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css"
+}

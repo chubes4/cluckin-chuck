@@ -1,0 +1,19 @@
+{
+	"name": "wing-submit",
+	"version": "0.1.0",
+	"description": "Submission form block for new wing locations and reviews with geocoding",
+	"author": "Chris Huber",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"format:js": "wp-scripts format"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^28.0.0"
+	},
+	"dependencies": {
+		"@babel/runtime": "^7.28.4"
+	}
+}

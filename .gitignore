@@ -1,0 +1,19 @@
+# Build outputs
+build/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Node modules (if any at root level)
+node_modules/
+
+# Composer vendor (if any at root level)
+vendor/
+
+# Temporary files
+*.tmp
+*.temp

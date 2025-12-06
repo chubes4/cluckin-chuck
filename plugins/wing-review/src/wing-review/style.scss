@@ -1,0 +1,195 @@
+/**
+ * Wing Review Block - Frontend Styles
+ *
+ * Styles for displaying wing reviews and location details on the frontend
+ */
+
+.wing-review-block {
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+	background: #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+	@media (max-width: 768px) {
+		padding: 1rem;
+	}
+}
+
+/* Location details section (first block only) */
+.wing-review-block .wing-location-header {
+	border-bottom: 2px solid #f0f0f0;
+	padding-bottom: 1.5rem;
+	margin-bottom: 1.5rem;
+}
+
+.wing-location-header h3 {
+	margin: 0 0 1rem 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: #333;
+}
+
+.wing-location-details {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 1rem;
+
+	@media (max-width: 480px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.wing-detail-item {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	color: #555;
+
+	strong {
+		display: block;
+		color: #333;
+		margin-bottom: 0.25rem;
+	}
+
+	a {
+		color: #0066cc;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+/* Review content section */
+.wing-review-content {
+	margin-top: 1.5rem;
+}
+
+.wing-reviewer-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+
+	@media (max-width: 480px) {
+		flex-direction: column;
+	}
+}
+
+.wing-reviewer-name {
+	font-weight: 600;
+	color: #333;
+	font-size: 1rem;
+}
+
+.wing-review-date {
+	font-size: 0.9rem;
+	color: #888;
+}
+
+/* Rating display */
+.wing-rating-display {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 1rem 0;
+	flex-wrap: wrap;
+}
+
+.wing-rating-label {
+	font-weight: 600;
+	color: #333;
+	min-width: 120px;
+}
+
+.wing-rating-stars {
+	font-size: 1.2rem;
+	letter-spacing: 0.25rem;
+	color: #ffc107;
+	white-space: nowrap;
+}
+
+.wing-rating-value {
+	color: #666;
+	font-size: 0.95rem;
+	white-space: nowrap;
+}
+
+/* Review text */
+.wing-review-text {
+	margin: 1rem 0;
+	line-height: 1.7;
+	color: #444;
+	font-size: 0.95rem;
+
+	p {
+		margin: 0 0 1rem 0;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+/* Services list */
+.wing-services-list {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin: 1rem 0;
+	padding: 1rem;
+	background: #f9f9f9;
+	border-radius: 4px;
+
+	@media (max-width: 480px) {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+}
+
+.wing-service-item {
+	display: flex;
+	align-items: center;
+	font-size: 0.95rem;
+	color: #555;
+
+	&:before {
+		content: '✓';
+		display: inline-block;
+		margin-right: 0.5rem;
+		color: #4caf50;
+		font-weight: bold;
+	}
+}
+
+.wing-service-item.unavailable {
+	opacity: 0.6;
+
+	&:before {
+		content: '✗';
+		color: #999;
+	}
+}
+
+/* Price range badge */
+.wing-price-range {
+	display: inline-block;
+	padding: 0.25rem 0.75rem;
+	background: #e8f5e9;
+	color: #2e7d32;
+	border-radius: 4px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	margin: 0.5rem 0;
+}
+
+/* Multiple reviews spacing */
+.wing-review-block + .wing-review-block {
+	margin-top: 2rem;
+	border-top: 2px solid #f0f0f0;
+	padding-top: 2rem;
+}

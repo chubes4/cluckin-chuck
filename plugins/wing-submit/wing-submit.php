@@ -23,24 +23,6 @@ define( 'WING_SUBMIT_VERSION', '0.1.0' );
 define( 'WING_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
-add_action( 'plugins_loaded', __NAMESPACE__ . '\maybe_include_theme_meta_helper', 5 );
-
-function maybe_include_theme_meta_helper() {
-	if ( class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
-		return;
-	}
-
-	if ( ! function_exists( 'get_theme_file_path' ) ) {
-		return;
-	}
-
-	$meta_path = get_theme_file_path( 'inc/class-wing-location-meta.php' );
-
-	if ( $meta_path && file_exists( $meta_path ) ) {
-		require_once $meta_path;
-	}
-}
-
 function get_meta_helper() {
 	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
 		return null;
@@ -139,7 +121,9 @@ function register_rest_routes() {
 		array(
 			'methods'             => 'POST',
 			'callback'            => __NAMESPACE__ . '\\rest_submit_handler',
-			'permission_callback' => '__return_true',
+			'permission_callback' => function( $request ) {
+				return wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' );
+			},
 		)
 	);
 
@@ -149,7 +133,9 @@ function register_rest_routes() {
 		array(
 			'methods'             => 'POST',
 			'callback'            => __NAMESPACE__ . '\\rest_geocode_handler',
-			'permission_callback' => '__return_true',
+			'permission_callback' => function( $request ) {
+				return wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' );
+			},
 		)
 	);
 }
@@ -345,7 +331,7 @@ function geocode_address( $address ) {
 		$url,
 		array(
 			'headers' => array(
-				'User-Agent' => 'WingSubmit/1.0 (https://chubes.net)',
+				'User-Agent' => 'WingSubmit/0.1.0 (https://chubes.net)',
 			),
 			'timeout' => 10,
 		)

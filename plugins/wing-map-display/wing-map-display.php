@@ -23,6 +23,13 @@ define( 'WING_MAP_DISPLAY_VERSION', '0.1.0' );
 define( 'WING_MAP_DISPLAY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_MAP_DISPLAY_URL', plugin_dir_url( __FILE__ ) );
 
+function get_meta_helper() {
+	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
+		return null;
+	}
+	return '\\CluckinChuck\\Wing_Location_Meta';
+}
+
 function register_block() {
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
@@ -78,6 +85,8 @@ function enqueue_assets() {
 }
 
 function get_wing_locations() {
+	$meta_helper = get_meta_helper();
+
 	$query = new \WP_Query(
 		array(
 			'post_type'      => 'wing_location',
@@ -89,38 +98,57 @@ function get_wing_locations() {
 	$locations = array();
 
 	foreach ( $query->posts as $post ) {
-		$blocks = parse_blocks( $post->post_content );
+		$lat = 0;
+		$lng = 0;
+		$address = '';
+		$avg_rating = 0;
+		$review_count = 0;
 
-		$wing_reviews = array_filter( $blocks, function( $block ) {
-			return 'wing-map/wing-review' === $block['blockName'];
-		} );
-
-		if ( empty( $wing_reviews ) ) {
-			continue;
+		if ( $meta_helper ) {
+			$meta         = $meta_helper::get_location_meta( $post->ID );
+			$lat          = floatval( $meta['wing_latitude'] );
+			$lng          = floatval( $meta['wing_longitude'] );
+			$address      = $meta['wing_address'];
+			$avg_rating   = floatval( $meta['wing_average_rating'] );
+			$review_count = intval( $meta['wing_review_count'] );
 		}
-
-		$first_review = reset( $wing_reviews );
-		$lat = $first_review['attrs']['latitude'] ?? 0;
-		$lng = $first_review['attrs']['longitude'] ?? 0;
 
 		if ( empty( $lat ) || empty( $lng ) ) {
-			continue;
+			$blocks = parse_blocks( $post->post_content );
+
+			$wing_reviews = array_filter( $blocks, function( $block ) {
+				return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
+			} );
+
+			if ( empty( $wing_reviews ) ) {
+				continue;
+			}
+
+			$first_review = reset( $wing_reviews );
+			$lat          = floatval( $first_review['attrs']['latitude'] ?? 0 );
+			$lng          = floatval( $first_review['attrs']['longitude'] ?? 0 );
+			$address      = $first_review['attrs']['address'] ?? '';
+
+			if ( empty( $lat ) || empty( $lng ) ) {
+				continue;
+			}
+
+			$ratings = array_map( function( $block ) {
+				return floatval( $block['attrs']['rating'] ?? 0 );
+			}, $wing_reviews );
+
+			$avg_rating   = count( $ratings ) > 0 ? array_sum( $ratings ) / count( $ratings ) : 0;
+			$review_count = count( $wing_reviews );
 		}
-
-		$ratings = array_map( function( $block ) {
-			return $block['attrs']['rating'] ?? 0;
-		}, $wing_reviews );
-
-		$avg_rating = array_sum( $ratings ) / count( $ratings );
 
 		$locations[] = array(
 			'id'          => $post->ID,
 			'title'       => get_the_title( $post ),
-			'lat'         => floatval( $lat ),
-			'lng'         => floatval( $lng ),
-			'address'     => $first_review['attrs']['address'] ?? '',
+			'lat'         => $lat,
+			'lng'         => $lng,
+			'address'     => $address,
 			'rating'      => round( $avg_rating ),
-			'reviewCount' => count( $wing_reviews ),
+			'reviewCount' => $review_count,
 			'url'         => get_permalink( $post ),
 		);
 	}

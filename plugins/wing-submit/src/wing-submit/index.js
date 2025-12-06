@@ -8,7 +8,7 @@
 import { registerBlockType } from '@wordpress/blocks';
 import Edit from './edit';
 
-registerBlockType('wing-map/wing-submit', {
+registerBlockType( 'wing-map/wing-submit', {
 	edit: Edit,
 	save: () => null,
-});
+} );

@@ -2,9 +2,30 @@
 
 A modern WordPress block theme dedicated to showcasing chicken wing locations across the USA. Built with Full Site Editing (FSE) for maximum flexibility and ease of use.
 
-## Overview
+## Theme Responsibilities
 
-Cluckin Chuck is a clean, minimal block theme designed to work seamlessly with the Wing Map plugin. It provides beautiful templates for displaying wing location posts, archives, and all the presentation layer needed for a wing-focused website.
+This theme **owns core project data** and provides the presentation layer:
+
+### Data Ownership
+- **Custom Post Type**: `wing_location` (slug: `wings`)
+- **Metadata Management**: All location data via `Wing_Location_Meta` class
+- **Single Source of Truth**: Primary data source for all plugins
+
+### Presentation Layer
+- Full Site Editing (FSE) templates
+- Wing sauce color scheme
+- Responsive layouts and typography
+- Template parts (header, footer)
+
+## Integration with Plugins
+
+The three separate plugins consume data from this theme:
+
+- **wing-map-display** - Reads location coordinates and displays interactive map
+- **wing-review** - Displays reviews and converts approved comments to blocks
+- **wing-submit** - Creates submissions and saves to theme metadata
+
+All plugins check for `CluckinChuck\Wing_Location_Meta` and fall back to wing-review block attributes if theme is unavailable.
 
 ## Features
 
@@ -18,7 +39,10 @@ Cluckin Chuck is a clean, minimal block theme designed to work seamlessly with t
 
 - WordPress 6.0 or higher
 - PHP 8.0 or higher
-- **Wing Map Plugin** (for full functionality with wing location custom post type)
+- **Three plugins** (for full functionality):
+  - wing-map-display
+  - wing-review
+  - wing-submit
 
 ## Installation
 
@@ -92,6 +116,9 @@ cluckin-chuck/
 ├── functions.php       (theme setup)
 ├── README.md           (this file)
 ├── build.sh            (production build script)
+├── inc/
+│   ├── class-wing-location.php (CPT registration)
+│   └── class-wing-location-meta.php (metadata management)
 ├── templates/
 │   ├── index.html
 │   ├── single-wing_location.html
@@ -101,11 +128,63 @@ cluckin-chuck/
     └── footer.html
 ```
 
+## Theme Metadata API
+
+The theme provides the `Wing_Location_Meta` helper class for metadata management:
+
+```php
+namespace CluckinChuck;
+
+class Wing_Location_Meta {
+    // Get all metadata for a wing location
+    public static function get_location_meta($post_id);
+    
+    // Update metadata for a wing location
+    public static function update_location_meta($post_id, $meta_data);
+}
+```
+
+**Available metadata keys**:
+- `wing_address` - Street address
+- `wing_latitude` - Decimal latitude
+- `wing_longitude` - Decimal longitude
+- `wing_phone` - Phone number
+- `wing_website` - Website URL
+- `wing_email` - Email address
+- `wing_hours` - Operating hours
+- `wing_price_range` - Price range ($, $$, $$$, $$$$)
+- `wing_takeout` - Boolean (takeout available)
+- `wing_delivery` - Boolean (delivery available)
+- `wing_dine_in` - Boolean (dine-in available)
+- `wing_average_rating` - Average rating (1-5 float)
+- `wing_review_count` - Count of reviews
+
+## Plugin Integration
+
+The theme works seamlessly with three separate plugins:
+
+### wing-map-display
+- Displays an interactive Leaflet map
+- Reads location coordinates from theme metadata
+- Shows all published wing locations with markers
+
+### wing-review
+- Displays user reviews as blocks
+- Converts approved comments to review blocks
+- Shows location details from theme metadata
+- Recalculates aggregate ratings
+
+### wing-submit
+- Provides a form block for user submissions
+- Creates wing_location posts and reviews
+- Geocodes addresses via Nominatim API
+- Saves data to theme metadata
+
 ## Development
 
 ### Project Location
 
-This theme is located in the project directory structure at `/cluckin-chuck/cluckin-chuck/` within the development repository. When deployed to WordPress, it should be placed in `/wp-content/themes/cluckin-chuck/`.
+This theme is located in the project directory structure at `/themes/cluckin-chuck/` within the development repository. When deployed to WordPress, it should be placed in `/wp-content/themes/cluckin-chuck/`.
 
 ### Building for Production
 
@@ -126,19 +205,6 @@ All templates are HTML files using WordPress block markup. Edit them in:
 - WordPress Admin → Appearance → Editor
 - Or directly in the theme files using a code editor
 
-## Integration with Wing Map Plugin
-
-This theme is designed to work with the Wing Map plugin, which provides:
-- `wing_location` custom post type
-- `wing-map/map-display` block for interactive maps
-- `wing-map/wing-review` block for displaying user-submitted reviews
-- Wing location metadata (address, coordinates, ratings)
-- User review submission and moderation system
-
-The theme displays reviews embedded in wing location posts as `wing-map/wing-review` blocks, which are automatically generated from approved user comments.
-
-**Note:** The theme will work without the plugin, but wing location functionality requires the plugin to be active.
-
 ## Support
 
 For issues, questions, or contributions:
@@ -156,13 +222,17 @@ Built with love for chicken wing enthusiasts across the USA 🍗
 
 ---
 
-**Version:** 0.1.0
+**Version:** 0.1.0  
 **Last Updated:** 2025
 
 ---
 
 ## Additional Documentation
 
-- **Root README.md** - Complete project overview and architecture
-- **plan.md** - Detailed implementation reference and architectural documentation
-- **wing-map/README.md** - Wing Map plugin documentation
+- **Root README.md** - Complete project overview and setup instructions
+- **AGENTS.md** - Development standards and architecture principles
+- **plan.md** - Implementation reference and architectural decisions
+- **plugins/wing-map-display/README.md** - Map block documentation
+- **plugins/wing-review/README.md** - Review block documentation
+- **plugins/wing-submit/README.md** - Submission form documentation
+

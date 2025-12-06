@@ -6,7 +6,7 @@
 	"category": "widgets",
 	"icon": "edit",
 	"description": "Button and modal form for submitting new wing locations or reviews",
-	"keywords": ["submit", "form", "wings", "review"],
+	"keywords": [ "submit", "form", "wings", "review" ],
 	"textdomain": "wing-submit",
 	"supports": {
 		"html": false,

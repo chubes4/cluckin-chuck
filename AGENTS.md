@@ -1,43 +1,297 @@
-# AGENTS.md
+# AGENTS.md - Cluckin Chuck Development Standards
 
-Monorepo containing a WordPress block theme and 3 block plugins for chicken wing location reviews.
+## Project Structure
 
-## Architecture
+**Monorepo Layout**: Block theme + three separate plugins for isolated development
 
-- **Theme** (`themes/cluckin-chuck/`): FSE block theme, owns `wing_location` CPT
-- **Plugin** (`plugins/wing-map-display/`): Leaflet map block showing all locations
-- **Plugin** (`plugins/wing-review/`): Review block with comment-to-block conversion on approval
-- **Plugin** (`plugins/wing-submit/`): Submission form block with geocoding
-- **Data**: All review/location data stored in wing-review block attributes (not post meta)
-
-## Commands
-
-```bash
-# Theme
-cd themes/cluckin-chuck && ./build.sh    # Production ZIP
-
-# Plugins (each plugin)
-cd plugins/wing-map-display && npm run build   # Build block
-cd plugins/wing-map-display && npm run start   # Watch mode
-
-cd plugins/wing-review && npm run build
-cd plugins/wing-review && npm run start
-
-cd plugins/wing-submit && npm run build
-cd plugins/wing-submit && npm run start
+```
+cluckin-chuck/
+├── themes/cluckin-chuck/          (THEME - owns wing_location CPT)
+├── plugins/
+│   ├── wing-map-display/          (PLUGIN - map display block)
+│   ├── wing-review/               (PLUGIN - review display + comment conversion)
+│   └── wing-submit/               (PLUGIN - submission form + geocoding)
+├── AGENTS.md                      (this file)
+├── README.md                      (project overview)
+└── plan.md                        (implementation reference)
 ```
 
-## Code Style
+## Architectural Principles
 
-- **PHP**: WordPress coding standards, PHP 8.0+ type hints
-- **JS**: @wordpress/scripts, vanilla JS (no jQuery), ES6+ modules
-- **Naming**: `snake_case` PHP functions/variables, `camelCase` JS, `PascalCase` classes
-- **Security**: Always use nonces (`wp_verify_nonce`), sanitize all input (`sanitize_text_field`, `floatval`, etc.), escape output (`esc_html`, `esc_attr`)
-- **Blocks**: Source in `src/[block-name]/`, compiled to `build/[block-name]/`, server-side rendered via PHP
+### Theme Ownership
+- **Theme owns `wing_location` custom post type** (CPT registration in `inc/class-wing-location.php`)
+- **Theme owns `Wing_Location_Meta` class** (metadata management in `inc/class-wing-location-meta.php`)
+- Theme provides the **single source of truth** for location data
+- All plugins interact with theme's metadata via `CluckinChuck\Wing_Location_Meta` helper class
 
-## Namespaces
+### Three-Plugin Split
+Separate plugins enable **isolated development** - each plugin can be worked on independently:
 
-- **Theme**: `CluckinChuck\`
-- **wing-map-display**: `WingMapDisplay\`
-- **wing-review**: `WingReview\`
-- **wing-submit**: `WingSubmit\`
+1. **wing-map-display** - Renders interactive Leaflet map from wing locations
+   - Single responsibility: Display map block
+   - Block name: `wing-map/map-display`
+   - Reads data from theme meta or wing-review blocks (fallback)
+   - Namespace: `WingMapDisplay\`
+
+2. **wing-review** - Display reviews + convert approved comments to blocks
+   - Single responsibility: Review display + comment-to-block conversion
+   - Block name: `wing-map/wing-review`
+   - Hooks into comment approval workflow
+   - Recalculates aggregate stats
+   - Namespace: `WingReview\`
+
+3. **wing-submit** - Form block for new locations/reviews + geocoding
+   - Single responsibility: Handle submissions + geocoding
+   - Block name: `wing-submit/wing-submit`
+   - Nominatim API integration (server-side)
+   - Rate limiting, honeypot, nonce security
+   - Namespace: `WingSubmit\`
+
+### KISS Principle
+- Direct, centralized solutions (theme owns data, plugins consume it)
+- Single responsibility per file/class
+- No dual support for multiple data contracts
+- Clear separation of concerns prevents complexity
+
+## Code Standards
+
+### Namespaces
+- Theme: `CluckinChuck\`
+- Plugins: `WingMapDisplay\`, `WingReview\`, `WingSubmit\`
+
+### Naming Conventions
+- **PHP**: `snake_case` for functions/variables, `PascalCase` for classes
+- **JavaScript**: `camelCase` for variables/functions, `PascalCase` for classes
+- **Files**: Match namespace structure, one class per file
+
+### Imports & Dependencies
+- Use **ES modules** for JavaScript (no CommonJS or default namespace imports)
+- Prefer **destructured imports** from `@wordpress/*` packages
+- Example: `import { registerBlockType } from '@wordpress/blocks';`
+
+### JavaScript
+- **Vanilla JavaScript only** - no jQuery, no third-party frameworks
+- No inline scripts - enqueue all assets via `wp_enqueue_script()/wp_enqueue_style()`
+- Build blocks with `@wordpress/scripts`
+- Block sources in `src/<block>/`, compiled to `build/<block>/`
+
+### CSS/SCSS
+- Use **SCSS per block** in `src/<block>/editor.scss` and `src/<block>/style.scss`
+- No inline styles - all styles in dedicated CSS files
+- Respect theme `theme.json` tokens and design system
+- Theme-wide variables available in root CSS
+
+### PHP Code Standards
+- Follow **WordPress Coding Standards**
+- PHP lint before committing: `php -l path/to/file.php`
+- Single responsibility principle - one responsibility per class/file
+- Clear, human-readable code reduces need for comments
+
+## Security Standards
+
+### Every Form & AJAX Handler Must Have:
+1. **Nonce verification** - `wp_verify_nonce()` for all form submissions
+2. **Input sanitization** - `sanitize_text_field()`, `floatval()`, `esc_url_raw()`, etc.
+3. **Output escaping** - `esc_html()`, `esc_attr()`, `esc_url()` when rendering
+4. **Capability checks** - `current_user_can()` for admin-only actions
+
+### Wing Submit Plugin Specifics:
+- Rate limiting: 1 review per IP per hour
+- Honeypot spam prevention
+- Nonce on submission form
+- Sanitize all inputs before processing
+
+### Error Handling
+- **Fail fast** - don't hide broken functionality with fallbacks
+- **Return human-readable errors** - use `wp_send_json_error()` with clear messages
+- No silent failures or placeholder fallbacks
+- Log issues for debugging
+
+## Build & Development
+
+### Plugin Development
+```bash
+# Watch mode (rebuilds on file changes)
+cd plugins/<plugin-name>
+npm run start
+
+# Production build
+npm run build
+
+# Linting
+npm run lint:js                                    # All blocks
+npm run lint:js -- src/wing-review/edit.js        # Single file
+
+# Format code
+npm run format:js                                  # All blocks
+npm run format:js -- src/wing-review/edit.js      # Single file
+```
+
+### Theme Development
+No build required - template parts and `theme.json` work directly.
+
+### Production Builds
+```bash
+# Plugin build
+cd plugins/<plugin-name>
+./build.sh
+# Output: build/<plugin-name>.zip
+
+# Theme build
+cd themes/cluckin-chuck
+./build.sh
+# Output: build/cluckin-chuck.zip
+```
+
+Build scripts:
+- Clean previous builds
+- Compile assets (plugins)
+- Install production dependencies (no-dev)
+- Create clean build directory
+- Create deployment ZIP
+- Verify success
+
+## Testing Standards
+
+### No PHPUnit Suite
+Manual testing approach:
+
+1. **Wing Submit REST API**
+   - Test form submission for new locations
+   - Test form submission for reviews on existing location
+   - Test geocoding functionality
+   - Test rate limiting
+   - Test honeypot spam prevention
+   - Test nonce verification
+
+2. **Comment-to-Review Block Conversion**
+   - Submit review (creates comment)
+   - Approve comment in WordPress admin
+   - Verify comment converted to `wing-map/wing-review` block
+   - Verify comment deleted after conversion
+   - Verify aggregate stats recalculated
+
+3. **Map Display**
+   - Verify map renders with all locations
+   - Verify markers show correct coordinates
+   - Test with/without location metadata
+   - Test fallback to wing-review block data
+
+## Data Architecture
+
+### Single Source of Truth
+Theme owns all location data via `Wing_Location_Meta`:
+
+```php
+// Meta keys (all stored on wing_location posts)
+'wing_address'          // Street address
+'wing_latitude'         // Decimal latitude
+'wing_longitude'        // Decimal longitude
+'wing_phone'            // Phone number
+'wing_website'          // Website URL
+'wing_hours'            // Operating hours
+'wing_price_range'      // Price range ($, $$, etc.)
+'wing_takeout'          // Boolean
+'wing_delivery'         // Boolean
+'wing_dine_in'          // Boolean
+'wing_average_rating'   // Float (1-5)
+'wing_review_count'     // Integer
+```
+
+### Plugin Data Access
+All plugins check for theme's meta helper:
+```php
+$meta_helper = get_meta_helper();  // Returns CluckinChuck\Wing_Location_Meta or null
+if ( $meta_helper ) {
+    $meta = $meta_helper::get_location_meta( $post_id );
+}
+```
+
+### Fallback Strategy
+If theme meta unavailable, plugins use data from `wing-map/wing-review` blocks:
+- wing-map-display reads from first review block's coordinates
+- wing-submit reads location details from first review block
+
+## Block Architecture
+
+### Block Structure
+```
+plugins/<plugin>/
+├── src/<block>/
+│   ├── block.json       (metadata)
+│   ├── edit.js          (editor interface)
+│   ├── index.js         (registration)
+│   ├── editor.scss      (editor styles)
+│   └── style.scss       (frontend styles)
+├── build/<block>/       (compiled output)
+└── <plugin>.php         (register_block_type call)
+```
+
+### Server-Side Rendering
+All three blocks use server-side rendering:
+- PHP render callbacks in plugin files
+- `register_block_type()` with render_callback
+- Saves return `null` in JS (no client-side saving)
+- Block markup generated by PHP on frontend
+
+### Block Attributes
+Stored in block HTML comments, accessible in render callback:
+```php
+function render_callback( $attributes, $content ) {
+    $rating = floatval( $attributes['rating'] ?? 0 );
+    // Render block HTML
+}
+```
+
+## Integration Points
+
+### How Plugins Work with Theme
+1. **Wing Submit** submits form data
+   - Creates new wing_location post (if new location)
+   - Stores submission as comment with metadata
+   - Calls geocoding service
+   - Saves coordinates to theme meta (if available)
+
+2. **Wing Review** displays reviews
+   - Reads approval status changes
+   - Converts approved comments to `wing-map/wing-review` blocks
+   - Reads location data from theme meta
+   - Displays first review block with location details
+   - Recalculates aggregate stats
+
+3. **Wing Map Display** renders map
+   - Queries wing_location posts
+   - Reads coordinates from theme meta
+   - Falls back to first wing-review block (if no meta)
+   - Calculates average rating from review blocks
+   - Renders interactive Leaflet map
+
+## APIs & External Services
+
+### REST API
+- Use WordPress REST API exclusively for data operations
+- No admin-ajax.php endpoints
+- Plugins register REST routes via `register_rest_route()`
+
+### Nominatim Geocoding (wing-submit)
+- **Service**: OpenStreetMap Nominatim API
+- **Endpoint**: `https://nominatim.openstreetmap.org/search`
+- **Rate limit**: 1 request/second (enforced server-side)
+- **User-Agent**: `WingSubmit/0.1.0 (https://chubes.net)`
+- **Server-side only** - never client-side requests
+
+## Documentation
+
+- **AGENTS.md** - This file, development standards and architecture
+- **README.md** - Project overview, setup, and features
+- **plan.md** - Implementation reference and architectural decisions
+- **plugins/*/README.md** - Plugin-specific documentation
+- **themes/cluckin-chuck/README.md** - Theme documentation and customization
+
+## Key Resources
+
+- WordPress REST API: https://developer.wordpress.org/rest-api/
+- WordPress Block Development: https://developer.wordpress.org/block-editor/
+- WordPress Coding Standards: https://developer.wordpress.org/coding-standards/
+- Leaflet.js: https://leafletjs.com/
+- Nominatim API: https://nominatim.org/release-docs/latest/api/Overview/

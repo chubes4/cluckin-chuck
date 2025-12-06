@@ -23,7 +23,101 @@ define( 'WING_SUBMIT_VERSION', '0.1.0' );
 define( 'WING_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
+add_action( 'plugins_loaded', __NAMESPACE__ . '\maybe_include_theme_meta_helper', 5 );
+
+function maybe_include_theme_meta_helper() {
+	if ( class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
+		return;
+	}
+
+	if ( ! function_exists( 'get_theme_file_path' ) ) {
+		return;
+	}
+
+	$meta_path = get_theme_file_path( 'inc/class-wing-location-meta.php' );
+
+	if ( $meta_path && file_exists( $meta_path ) ) {
+		require_once $meta_path;
+	}
+}
+
+function get_meta_helper() {
+	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
+		return null;
+	}
+
+	return '\\CluckinChuck\\Wing_Location_Meta';
+}
+
+function map_meta_input( $data ) {
+	return array(
+		'wing_address'        => $data['address'] ?? '',
+		'wing_latitude'       => $data['latitude'] ?? 0,
+		'wing_longitude'      => $data['longitude'] ?? 0,
+		'wing_phone'          => $data['phone'] ?? '',
+		'wing_website'        => $data['website'] ?? '',
+		'wing_hours'          => $data['hours'] ?? '',
+		'wing_price_range'    => $data['price_range'] ?? '',
+		'wing_takeout'        => $data['takeout'] ?? false,
+		'wing_delivery'       => $data['delivery'] ?? false,
+		'wing_dine_in'        => $data['dine_in'] ?? false,
+		'wing_average_rating' => floatval( $data['rating'] ?? 0 ),
+		'wing_review_count'   => 1,
+	);
+}
+
+function get_location_info_for_post( $post_id ) {
+	$meta_helper = get_meta_helper();
+
+	if ( $meta_helper ) {
+		$meta = $meta_helper::get_location_meta( $post_id );
+
+		return array(
+			'address'    => $meta['wing_address'] ?? '',
+			'latitude'   => $meta['wing_latitude'] ?? 0,
+			'longitude'  => $meta['wing_longitude'] ?? 0,
+			'phone'      => $meta['wing_phone'] ?? '',
+			'website'    => $meta['wing_website'] ?? '',
+			'hours'      => $meta['wing_hours'] ?? '',
+			'priceRange' => $meta['wing_price_range'] ?? '',
+			'takeout'    => $meta['wing_takeout'] ?? false,
+			'delivery'   => $meta['wing_delivery'] ?? false,
+			'dineIn'     => $meta['wing_dine_in'] ?? false,
+		);
+	}
+
+	$post_content = get_post_field( 'post_content', $post_id );
+	$blocks       = parse_blocks( $post_content );
+
+	$wing_reviews = array_filter( $blocks, function( $block ) {
+		return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
+	} );
+
+	if ( empty( $wing_reviews ) ) {
+		return array();
+	}
+
+	$first_review = reset( $wing_reviews );
+	$attrs        = $first_review['attrs'] ?? array();
+
+	return array(
+		'address'    => $attrs['address'] ?? '',
+		'latitude'   => $attrs['latitude'] ?? 0,
+		'longitude'  => $attrs['longitude'] ?? 0,
+		'phone'      => $attrs['phone'] ?? '',
+		'website'    => $attrs['website'] ?? '',
+		'hours'      => $attrs['hours'] ?? '',
+		'priceRange' => $attrs['priceRange'] ?? '',
+		'takeout'    => $attrs['takeout'] ?? false,
+		'delivery'   => $attrs['delivery'] ?? false,
+		'dineIn'     => $attrs['dineIn'] ?? false,
+	);
+}
+
 function register_block() {
+
+
+
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
 	}
@@ -36,11 +130,29 @@ function register_block() {
 	);
 }
 add_action( 'init', __NAMESPACE__ . '\\register_block' );
+add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
 
-add_action( 'wp_ajax_wing_submit', __NAMESPACE__ . '\\ajax_submit_handler' );
-add_action( 'wp_ajax_nopriv_wing_submit', __NAMESPACE__ . '\\ajax_submit_handler' );
-add_action( 'wp_ajax_wing_geocode', __NAMESPACE__ . '\\ajax_geocode_handler' );
-add_action( 'wp_ajax_nopriv_wing_geocode', __NAMESPACE__ . '\\ajax_geocode_handler' );
+function register_rest_routes() {
+	register_rest_route(
+		'wing-submit/v1',
+		'/submit',
+		array(
+			'methods'             => 'POST',
+			'callback'            => __NAMESPACE__ . '\\rest_submit_handler',
+			'permission_callback' => '__return_true',
+		)
+	);
+
+	register_rest_route(
+		'wing-submit/v1',
+		'/geocode',
+		array(
+			'methods'             => 'POST',
+			'callback'            => __NAMESPACE__ . '\\rest_geocode_handler',
+			'permission_callback' => '__return_true',
+		)
+	);
+}
 
 function render_callback() {
 	$script_handle = 'wing-submit-wing-submit-view-script';
@@ -48,8 +160,8 @@ function render_callback() {
 	wp_add_inline_script(
 		$script_handle,
 		'window.wingSubmitData = ' . wp_json_encode( array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'wing_submit_nonce' ),
+			'restUrl' => rest_url( 'wing-submit/v1' ),
+			'nonce'   => wp_create_nonce( 'wp_rest' ),
 		) ),
 		'before'
 	);
@@ -61,29 +173,7 @@ function render_callback() {
 
 	$location_data = array();
 	if ( $is_singular_location ) {
-		$post_content = get_post_field( 'post_content', $post_id );
-		$blocks       = parse_blocks( $post_content );
-
-		$wing_reviews = array_filter( $blocks, function( $block ) {
-			return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
-		} );
-
-		if ( ! empty( $wing_reviews ) ) {
-			$first_review  = reset( $wing_reviews );
-			$attrs         = $first_review['attrs'] ?? array();
-			$location_data = array(
-				'address'    => $attrs['address'] ?? '',
-				'latitude'   => $attrs['latitude'] ?? 0,
-				'longitude'  => $attrs['longitude'] ?? 0,
-				'phone'      => $attrs['phone'] ?? '',
-				'website'    => $attrs['website'] ?? '',
-				'hours'      => $attrs['hours'] ?? '',
-				'priceRange' => $attrs['priceRange'] ?? '',
-				'takeout'    => $attrs['takeout'] ?? false,
-				'delivery'   => $attrs['delivery'] ?? false,
-				'dineIn'     => $attrs['dineIn'] ?? false,
-			);
-		}
+		$location_data = get_location_info_for_post( $post_id );
 	}
 
 	ob_start();
@@ -225,22 +315,20 @@ function render_callback() {
 	return ob_get_clean();
 }
 
-function ajax_geocode_handler() {
-	check_ajax_referer( 'wing_submit_nonce', 'nonce' );
-
-	$address = sanitize_text_field( $_POST['address'] ?? '' );
+function rest_geocode_handler( \WP_REST_Request $request ) {
+	$address = sanitize_text_field( $request->get_param( 'address' ) ?? '' );
 
 	if ( empty( $address ) ) {
-		wp_send_json_error( 'Address is required' );
+		return new \WP_REST_Response( array( 'message' => 'Address is required' ), 400 );
 	}
 
 	$result = geocode_address( $address );
 
 	if ( $result ) {
-		wp_send_json_success( $result );
-	} else {
-		wp_send_json_error( 'Could not geocode address' );
+		return new \WP_REST_Response( $result, 200 );
 	}
+
+	return new \WP_REST_Response( array( 'message' => 'Could not geocode address' ), 400 );
 }
 
 function geocode_address( $address ) {
@@ -280,26 +368,26 @@ function geocode_address( $address ) {
 	return false;
 }
 
-function ajax_submit_handler() {
-	check_ajax_referer( 'wing_submit_nonce', 'nonce' );
+function rest_submit_handler( \WP_REST_Request $request ) {
+	$params = $request->get_params();
 
-	if ( ! empty( $_POST['wing_website_url'] ) ) {
-		wp_send_json_error( 'Spam detected' );
+	if ( ! empty( $params['wing_website_url'] ) ) {
+		return new \WP_REST_Response( array( 'message' => 'Spam detected' ), 400 );
 	}
 
 	$ip_hash       = md5( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
 	$transient_key = 'wing_submit_' . $ip_hash;
 
 	if ( get_transient( $transient_key ) ) {
-		wp_send_json_error( 'Please wait before submitting again' );
+		return new \WP_REST_Response( array( 'message' => 'Please wait before submitting again' ), 429 );
 	}
 
 	set_transient( $transient_key, true, HOUR_IN_SECONDS );
 
-	$data = sanitize_form_data( $_POST );
+	$data = sanitize_form_data( $params );
 
 	if ( ! validate_form_data( $data ) ) {
-		wp_send_json_error( 'Please fill in all required fields' );
+		return new \WP_REST_Response( array( 'message' => 'Please fill in all required fields' ), 400 );
 	}
 
 	$post_id = intval( $data['post_id'] ?? 0 );
@@ -311,12 +399,13 @@ function ajax_submit_handler() {
 	}
 
 	if ( is_wp_error( $result ) ) {
-		wp_send_json_error( $result->get_error_message() );
+		return new \WP_REST_Response( array( 'message' => $result->get_error_message() ), 500 );
 	}
 
-	wp_send_json_success( array(
-		'message' => 'Thank you! Your submission has been received and is pending review.',
-	) );
+	return new \WP_REST_Response(
+		array( 'message' => 'Thank you! Your submission has been received and is pending review.' ),
+		200
+	);
 }
 
 function sanitize_form_data( $post_data ) {
@@ -370,19 +459,14 @@ function create_pending_review_comment( $post_id, $data ) {
 		return new \WP_Error( 'comment_failed', 'Failed to create review' );
 	}
 
+	$meta_helper = get_meta_helper();
+	if ( $meta_helper ) {
+		$meta_helper::update_location_meta( $post_id, map_meta_input( $data ) );
+	}
+
 	add_comment_meta( $comment_id, 'wing_rating', $data['rating'] );
 	add_comment_meta( $comment_id, 'wing_sauce_rating', $data['sauce_rating'] );
 	add_comment_meta( $comment_id, 'wing_crispiness_rating', $data['crispiness_rating'] );
-	add_comment_meta( $comment_id, 'wing_address', $data['address'] );
-	add_comment_meta( $comment_id, 'wing_latitude', $data['latitude'] );
-	add_comment_meta( $comment_id, 'wing_longitude', $data['longitude'] );
-	add_comment_meta( $comment_id, 'wing_phone', $data['phone'] );
-	add_comment_meta( $comment_id, 'wing_website', $data['website'] );
-	add_comment_meta( $comment_id, 'wing_hours', $data['hours'] );
-	add_comment_meta( $comment_id, 'wing_price_range', $data['price_range'] );
-	add_comment_meta( $comment_id, 'wing_takeout', $data['takeout'] );
-	add_comment_meta( $comment_id, 'wing_delivery', $data['delivery'] );
-	add_comment_meta( $comment_id, 'wing_dine_in', $data['dine_in'] );
 
 	send_admin_email( 'review', $data, get_the_title( $post_id ) );
 
@@ -422,6 +506,11 @@ function create_pending_location( $data ) {
 
 	if ( is_wp_error( $post_id ) ) {
 		return $post_id;
+	}
+
+	$meta_helper = get_meta_helper();
+	if ( $meta_helper ) {
+		$meta_helper::update_location_meta( $post_id, map_meta_input( $data ) );
 	}
 
 	send_admin_email( 'location', $data, $data['location_name'] );

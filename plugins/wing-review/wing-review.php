@@ -23,6 +23,13 @@ define( 'WING_REVIEW_VERSION', '0.1.0' );
 define( 'WING_REVIEW_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_URL', plugin_dir_url( __FILE__ ) );
 
+function get_meta_helper() {
+	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
+		return null;
+	}
+	return '\\CluckinChuck\\Wing_Location_Meta';
+}
+
 function register_block() {
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
@@ -52,16 +59,43 @@ function render_callback( $attributes ) {
 	$crispiness_rating = floatval( $attributes['crispinessRating'] ?? 0 );
 	$review_text       = wp_kses_post( $attributes['reviewText'] ?? '' );
 	$timestamp         = esc_html( $attributes['timestamp'] ?? '' );
-	$address           = esc_html( $attributes['address'] ?? '' );
-	$phone             = esc_html( $attributes['phone'] ?? '' );
-	$website           = esc_url( $attributes['website'] ?? '' );
-	$hours             = esc_html( $attributes['hours'] ?? '' );
-	$price_range       = esc_html( $attributes['priceRange'] ?? '' );
-	$takeout           = ! empty( $attributes['takeout'] );
-	$delivery          = ! empty( $attributes['delivery'] );
-	$dine_in           = ! empty( $attributes['dineIn'] );
 
 	$is_first_block = is_first_review_block();
+
+	$address     = '';
+	$phone       = '';
+	$website     = '';
+	$hours       = '';
+	$price_range = '';
+	$takeout     = false;
+	$delivery    = false;
+	$dine_in     = false;
+
+	if ( $is_first_block ) {
+		$meta_helper = get_meta_helper();
+		$post_id     = get_the_ID();
+
+		if ( $meta_helper && $post_id ) {
+			$meta        = $meta_helper::get_location_meta( $post_id );
+			$address     = esc_html( $meta['wing_address'] );
+			$phone       = esc_html( $meta['wing_phone'] );
+			$website     = esc_url( $meta['wing_website'] );
+			$hours       = esc_html( $meta['wing_hours'] );
+			$price_range = esc_html( $meta['wing_price_range'] );
+			$takeout     = (bool) $meta['wing_takeout'];
+			$delivery    = (bool) $meta['wing_delivery'];
+			$dine_in     = (bool) $meta['wing_dine_in'];
+		} else {
+			$address     = esc_html( $attributes['address'] ?? '' );
+			$phone       = esc_html( $attributes['phone'] ?? '' );
+			$website     = esc_url( $attributes['website'] ?? '' );
+			$hours       = esc_html( $attributes['hours'] ?? '' );
+			$price_range = esc_html( $attributes['priceRange'] ?? '' );
+			$takeout     = ! empty( $attributes['takeout'] );
+			$delivery    = ! empty( $attributes['delivery'] );
+			$dine_in     = ! empty( $attributes['dineIn'] );
+		}
+	}
 
 	$full_stars  = str_repeat( '★', (int) round( $rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $rating ) );
@@ -176,7 +210,7 @@ function is_first_review_block() {
  *
  * Triggered when a comment status changes to 'approve'.
  * Reads comment metadata, builds wing-review block, appends to post content,
- * then deletes the original comment.
+ * recalculates aggregate stats, then deletes the original comment.
  */
 function convert_to_block( $comment_id, $status ) {
 	if ( 'approve' !== $status ) {
@@ -188,20 +222,10 @@ function convert_to_block( $comment_id, $status ) {
 		return;
 	}
 
+	$post_id           = $comment->comment_post_ID;
 	$rating            = get_comment_meta( $comment_id, 'wing_rating', true );
 	$sauce_rating      = get_comment_meta( $comment_id, 'wing_sauce_rating', true );
 	$crispiness_rating = get_comment_meta( $comment_id, 'wing_crispiness_rating', true );
-
-	$address   = get_comment_meta( $comment_id, 'wing_address', true );
-	$latitude  = get_comment_meta( $comment_id, 'wing_latitude', true );
-	$longitude = get_comment_meta( $comment_id, 'wing_longitude', true );
-	$phone     = get_comment_meta( $comment_id, 'wing_phone', true );
-	$website   = get_comment_meta( $comment_id, 'wing_website', true );
-	$hours     = get_comment_meta( $comment_id, 'wing_hours', true );
-	$price     = get_comment_meta( $comment_id, 'wing_price_range', true );
-	$takeout   = get_comment_meta( $comment_id, 'wing_takeout', true );
-	$delivery  = get_comment_meta( $comment_id, 'wing_delivery', true );
-	$dine_in   = get_comment_meta( $comment_id, 'wing_dine_in', true );
 
 	$block_content = serialize_block(
 		array(
@@ -214,21 +238,11 @@ function convert_to_block( $comment_id, $status ) {
 				'crispinessRating' => floatval( $crispiness_rating ),
 				'reviewText'       => $comment->comment_content,
 				'timestamp'        => $comment->comment_date,
-				'address'          => $address,
-				'latitude'         => floatval( $latitude ),
-				'longitude'        => floatval( $longitude ),
-				'phone'            => $phone,
-				'website'          => $website,
-				'hours'            => $hours,
-				'priceRange'       => $price,
-				'takeout'          => (bool) $takeout,
-				'delivery'         => (bool) $delivery,
-				'dineIn'           => (bool) $dine_in,
 			),
 		)
 	);
 
-	$post = get_post( $comment->comment_post_ID );
+	$post        = get_post( $post_id );
 	$new_content = $post->post_content . "\n\n" . $block_content;
 
 	wp_update_post(
@@ -238,5 +252,38 @@ function convert_to_block( $comment_id, $status ) {
 		)
 	);
 
+	recalculate_location_stats( $post_id );
+
 	wp_delete_comment( $comment_id, true );
+}
+
+/**
+ * Recalculate average rating and review count from wing-review blocks
+ */
+function recalculate_location_stats( $post_id ) {
+	$meta_helper = get_meta_helper();
+	if ( ! $meta_helper ) {
+		return;
+	}
+
+	$post   = get_post( $post_id );
+	$blocks = parse_blocks( $post->post_content );
+
+	$wing_reviews = array_filter( $blocks, function( $block ) {
+		return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
+	} );
+
+	$review_count = count( $wing_reviews );
+	$total_rating = 0;
+
+	foreach ( $wing_reviews as $review ) {
+		$total_rating += floatval( $review['attrs']['rating'] ?? 0 );
+	}
+
+	$average_rating = $review_count > 0 ? round( $total_rating / $review_count, 2 ) : 0;
+
+	$meta_helper::update_location_meta( $post_id, array(
+		'wing_average_rating' => $average_rating,
+		'wing_review_count'   => $review_count,
+	) );
 }

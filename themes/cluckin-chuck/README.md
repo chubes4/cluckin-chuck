@@ -19,13 +19,14 @@ This theme **owns core project data** and provides the presentation layer:
 
 ## Integration with Plugins
 
-The three separate plugins consume data from this theme:
+The four separate plugins consume data from this theme:
 
+- **wing-location-details** - Displays location hero with address, phone, hours, services
 - **wing-map-display** - Reads location coordinates and displays interactive map
 - **wing-review** - Displays reviews and converts approved comments to blocks
-- **wing-submit** - Creates submissions and saves to theme metadata
+- **wing-review-submit** - Creates submissions and saves to theme metadata
 
-All plugins check for `CluckinChuck\Wing_Location_Meta` and fall back to wing-review block attributes if theme is unavailable.
+All plugins require `CluckinChuck\Wing_Location_Meta` for data access.
 
 ## Features
 
@@ -39,10 +40,11 @@ All plugins check for `CluckinChuck\Wing_Location_Meta` and fall back to wing-re
 
 - WordPress 6.0 or higher
 - PHP 8.0 or higher
-- **Three plugins** (for full functionality):
+- **Four plugins** (for full functionality):
+  - wing-location-details
   - wing-map-display
   - wing-review
-  - wing-submit
+  - wing-review-submit
 
 ## Installation
 
@@ -161,7 +163,12 @@ class Wing_Location_Meta {
 
 ## Plugin Integration
 
-The theme works seamlessly with three separate plugins:
+The theme works seamlessly with four separate plugins:
+
+### wing-location-details
+- Displays location hero block with address, phone, hours, services
+- Reads all data from theme metadata
+- Shows aggregate rating and review count
 
 ### wing-map-display
 - Displays an interactive Leaflet map
@@ -171,10 +178,9 @@ The theme works seamlessly with three separate plugins:
 ### wing-review
 - Displays user reviews as blocks
 - Converts approved comments to review blocks
-- Shows location details from theme metadata
 - Recalculates aggregate ratings
 
-### wing-submit
+### wing-review-submit
 - Provides a form block for user submissions
 - Creates wing_location posts and reviews
 - Geocodes addresses via Nominatim API
@@ -222,7 +228,7 @@ Built with love for chicken wing enthusiasts across the USA 🍗
 
 ---
 
-**Version:** 0.1.0  
+**Version:** 0.1.1  
 **Last Updated:** 2025
 
 ---
@@ -232,7 +238,8 @@ Built with love for chicken wing enthusiasts across the USA 🍗
 - **Root README.md** - Complete project overview and setup instructions
 - **AGENTS.md** - Development standards and architecture principles
 - **plan.md** - Implementation reference and architectural decisions
+- **plugins/wing-location-details/README.md** - Location details block documentation
 - **plugins/wing-map-display/README.md** - Map block documentation
 - **plugins/wing-review/README.md** - Review block documentation
-- **plugins/wing-submit/README.md** - Submission form documentation
+- **plugins/wing-review-submit/README.md** - Submission form documentation
 

@@ -1,13 +1,13 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "wing-map/wing-submit",
-	"title": "Wing Location Submit",
+	"name": "wing-review-submit/wing-review-submit",
+	"title": "Wing Review Submit",
 	"category": "widgets",
 	"icon": "edit",
-	"description": "Button and modal form for submitting new wing locations or reviews",
+	"description": "Frontend form for submitting new wing locations or reviews on existing locations",
 	"keywords": [ "submit", "form", "wings", "review" ],
-	"textdomain": "wing-submit",
+	"textdomain": "wing-review-submit",
 	"supports": {
 		"html": false,
 		"multiple": false

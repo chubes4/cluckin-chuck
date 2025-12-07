@@ -2,15 +2,16 @@
 
 ## Project Structure
 
-**Monorepo Layout**: Block theme + three separate plugins for isolated development
+**Monorepo Layout**: Block theme + four separate plugins for isolated development
 
 ```
 cluckin-chuck/
 ├── themes/cluckin-chuck/          (THEME - owns wing_location CPT)
 ├── plugins/
+│   ├── wing-location-details/     (PLUGIN - location details hero block)
 │   ├── wing-map-display/          (PLUGIN - map display block)
 │   ├── wing-review/               (PLUGIN - review display + comment conversion)
-│   └── wing-submit/               (PLUGIN - submission form + geocoding)
+│   └── wing-review-submit/        (PLUGIN - submission form + geocoding)
 ├── AGENTS.md                      (this file)
 ├── README.md                      (project overview)
 └── plan.md                        (implementation reference)
@@ -24,28 +25,34 @@ cluckin-chuck/
 - Theme provides the **single source of truth** for location data
 - All plugins interact with theme's metadata via `CluckinChuck\Wing_Location_Meta` helper class
 
-### Three-Plugin Split
+### Four-Plugin Split
 Separate plugins enable **isolated development** - each plugin can be worked on independently:
 
-1. **wing-map-display** - Renders interactive Leaflet map from wing locations
+1. **wing-location-details** - Hero block displaying location details
+   - Single responsibility: Display location details (address, phone, hours, services, ratings)
+   - Block name: `wing-location-details/wing-location-details`
+   - Reads data from theme meta
+   - Namespace: `WingLocationDetails\`
+
+2. **wing-map-display** - Renders interactive Leaflet map from wing locations
    - Single responsibility: Display map block
    - Block name: `wing-map/map-display`
-   - Reads data from theme meta or wing-review blocks (fallback)
+   - Reads data from theme meta
    - Namespace: `WingMapDisplay\`
 
-2. **wing-review** - Display reviews + convert approved comments to blocks
+3. **wing-review** - Display reviews + convert approved comments to blocks
    - Single responsibility: Review display + comment-to-block conversion
-   - Block name: `wing-map/wing-review`
+   - Block name: `wing-review/wing-review`
    - Hooks into comment approval workflow
    - Recalculates aggregate stats
    - Namespace: `WingReview\`
 
-3. **wing-submit** - Form block for new locations/reviews + geocoding
+4. **wing-review-submit** - Form block for new locations/reviews + geocoding
    - Single responsibility: Handle submissions + geocoding
-   - Block name: `wing-submit/wing-submit`
+   - Block name: `wing-review-submit/wing-review-submit`
    - Nominatim API integration (server-side)
    - Rate limiting, honeypot, nonce security
-   - Namespace: `WingSubmit\`
+   - Namespace: `WingReviewSubmit\`
 
 ### KISS Principle
 - Direct, centralized solutions (theme owns data, plugins consume it)
@@ -57,7 +64,7 @@ Separate plugins enable **isolated development** - each plugin can be worked on 
 
 ### Namespaces
 - Theme: `CluckinChuck\`
-- Plugins: `WingMapDisplay\`, `WingReview\`, `WingSubmit\`
+- Plugins: `WingLocationDetails\`, `WingMapDisplay\`, `WingReview\`, `WingReviewSubmit\`
 
 ### Naming Conventions
 - **PHP**: `snake_case` for functions/variables, `PascalCase` for classes
@@ -95,7 +102,7 @@ Separate plugins enable **isolated development** - each plugin can be worked on 
 3. **Output escaping** - `esc_html()`, `esc_attr()`, `esc_url()` when rendering
 4. **Capability checks** - `current_user_can()` for admin-only actions
 
-### Wing Submit Plugin Specifics:
+### Wing Review Submit Plugin Specifics:
 - Rate limiting: 1 review per IP per hour
 - Honeypot spam prevention
 - Nonce on submission form
@@ -167,15 +174,14 @@ Manual testing approach:
 2. **Comment-to-Review Block Conversion**
    - Submit review (creates comment)
    - Approve comment in WordPress admin
-   - Verify comment converted to `wing-map/wing-review` block
+   - Verify comment converted to `wing-review/wing-review` block
    - Verify comment deleted after conversion
    - Verify aggregate stats recalculated
 
 3. **Map Display**
    - Verify map renders with all locations
    - Verify markers show correct coordinates
-   - Test with/without location metadata
-   - Test fallback to wing-review block data
+   - Test with location metadata present
 
 ## Data Architecture
 
@@ -199,18 +205,13 @@ Theme owns all location data via `Wing_Location_Meta`:
 ```
 
 ### Plugin Data Access
-All plugins check for theme's meta helper:
+All plugins require the theme's meta helper:
 ```php
 $meta_helper = get_meta_helper();  // Returns CluckinChuck\Wing_Location_Meta or null
 if ( $meta_helper ) {
     $meta = $meta_helper::get_location_meta( $post_id );
 }
 ```
-
-### Fallback Strategy
-If theme meta unavailable, plugins use data from `wing-map/wing-review` blocks:
-- wing-map-display reads from first review block's coordinates
-- wing-submit reads location details from first review block
 
 ## Block Architecture
 
@@ -228,7 +229,7 @@ plugins/<plugin>/
 ```
 
 ### Server-Side Rendering
-All three blocks use server-side rendering:
+All four blocks use server-side rendering:
 - PHP render callbacks in plugin files
 - `register_block_type()` with render_callback
 - Saves return `null` in JS (no client-side saving)
@@ -246,25 +247,26 @@ function render_callback( $attributes, $content ) {
 ## Integration Points
 
 ### How Plugins Work with Theme
-1. **Wing Submit** submits form data
+1. **Wing Review Submit** submits form data
    - Creates new wing_location post (if new location)
    - Stores submission as comment with metadata
    - Calls geocoding service
-   - Saves coordinates to theme meta (if available)
+   - Saves coordinates to theme meta
 
 2. **Wing Review** displays reviews
    - Reads approval status changes
-   - Converts approved comments to `wing-map/wing-review` blocks
+   - Converts approved comments to `wing-review/wing-review` blocks
    - Reads location data from theme meta
-   - Displays first review block with location details
    - Recalculates aggregate stats
 
 3. **Wing Map Display** renders map
    - Queries wing_location posts
    - Reads coordinates from theme meta
-   - Falls back to first wing-review block (if no meta)
-   - Calculates average rating from review blocks
    - Renders interactive Leaflet map
+
+4. **Wing Location Details** displays location info
+   - Reads location data from theme meta
+   - Renders hero block with address, phone, hours, services, ratings
 
 ## APIs & External Services
 
@@ -273,11 +275,11 @@ function render_callback( $attributes, $content ) {
 - No admin-ajax.php endpoints
 - Plugins register REST routes via `register_rest_route()`
 
-### Nominatim Geocoding (wing-submit)
+### Nominatim Geocoding (wing-review-submit)
 - **Service**: OpenStreetMap Nominatim API
 - **Endpoint**: `https://nominatim.openstreetmap.org/search`
 - **Rate limit**: 1 request/second (enforced server-side)
-- **User-Agent**: `WingSubmit/0.1.0 (https://chubes.net)`
+- **User-Agent**: `WingReviewSubmit/0.1.0 (https://chubes.net)`
 - **Server-side only** - never client-side requests
 
 ## Documentation

@@ -39,9 +39,8 @@ This plugin provides an interactive map visualization for wing locations. It que
   - Updates automatically when reviews are approved
 
 - **Data Source**
-  - Primary: Theme's `Wing_Location_Meta` class
-  - Fallback: Wing-review blocks (if theme unavailable)
-  - Handles missing data gracefully (skips locations without coordinates)
+  - Requires theme's `Wing_Location_Meta` class
+  - Skips locations without coordinates
 
 ## Installation
 
@@ -77,7 +76,7 @@ Or install via zip file:
 
 ### Reading from Theme Metadata
 
-The plugin checks for `CluckinChuck\Wing_Location_Meta`:
+The plugin requires `CluckinChuck\Wing_Location_Meta`:
 
 ```php
 $meta_helper = get_meta_helper();
@@ -90,19 +89,6 @@ if ($meta_helper) {
     $review_count = $meta['wing_review_count'];
 }
 ```
-
-### Fallback to Wing-Review Blocks
-
-If theme metadata is unavailable, the plugin reads from wing-review blocks:
-
-```php
-$blocks = parse_blocks($post->post_content);
-$wing_reviews = array_filter($blocks, function($b) {
-    return 'wing-map/wing-review' === ($b['blockName'] ?? '');
-});
-```
-
-Uses the first wing-review block for location coordinates and calculates average rating from all review blocks.
 
 ## Development
 
@@ -205,13 +191,13 @@ No custom hooks or filters are provided by this plugin (single responsibility).
 
 - WordPress 6.0+
 - PHP 8.0+
-- Cluckin Chuck theme (for optimal data access, but not required)
+- Cluckin Chuck theme (required for data access)
 
 ## Compatibility
 
-- Works with cluckin-chuck theme (reads theme metadata)
-- Compatible with wing-review plugin (reads review blocks as fallback)
-- Compatible with wing-submit plugin (displays submitted locations)
+- Requires cluckin-chuck theme (reads theme metadata)
+- Compatible with wing-review plugin (reads review stats)
+- Compatible with wing-review-submit plugin (displays submitted locations)
 
 ## Support
 
@@ -226,5 +212,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.0
+**Version**: 0.1.1
 **Last Updated**: 2025

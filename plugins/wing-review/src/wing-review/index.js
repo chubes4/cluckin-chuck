@@ -9,7 +9,7 @@
 import { registerBlockType } from '@wordpress/blocks';
 import Edit from './edit';
 
-registerBlockType('wing-map/wing-review', {
+registerBlockType('wing-review/wing-review', {
 	edit: Edit,
 	save: () => null,
 });

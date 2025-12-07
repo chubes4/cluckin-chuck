@@ -4,13 +4,13 @@ Review block for displaying wing location reviews with automatic comment-to-bloc
 
 ## Plugin Responsibility
 
-**Single Responsibility**: Register and render the `wing-map/wing-review` block + convert approved comments to blocks
+**Single Responsibility**: Register and render the `wing-review/wing-review` block + convert approved comments to blocks
 
 This plugin provides a review display block and hooks into the comment approval workflow to automatically convert approved comments into permanent review blocks stored in post content.
 
 ## Block Details
 
-- **Block Name**: `wing-map/wing-review`
+- **Block Name**: `wing-review/wing-review`
 - **Block Type**: Server-side rendered
 - **Category**: Widgets
 
@@ -30,22 +30,15 @@ This plugin provides a review display block and hooks into the comment approval 
   - Deletes original comment after conversion
   - Preserves comment content and metadata
 
-- **Location Details Display** (first block only)
-  - Address, phone, website, hours
-  - Price range and services offered
-  - Reads from theme metadata or block fallback
-  - Only displays on the first review block
-
 - **Aggregate Stats Recalculation**
   - Recalculates average rating from all review blocks
   - Recalculates review count
   - Updates theme metadata automatically
   - Used by wing-map-display for map display
 
-- **Data Source Flexibility**
-  - Primary: Theme's `Wing_Location_Meta` class
-  - Fallback: Block attributes (for location details)
-  - Handles missing data gracefully
+- **Data Source**
+  - Requires theme's `Wing_Location_Meta` class
+  - Reads and updates theme metadata
 
 ## Installation
 
@@ -88,7 +81,7 @@ The block stores review data as attributes:
 
 ### Comment-to-Review Block Workflow
 
-1. **User submits review** (via wing-submit form)
+1. **User submits review** (via wing-review-submit form)
    - Creates a comment on wing_location post
    - Stores ratings and review text in comment metadata
 
@@ -97,7 +90,7 @@ The block stores review data as attributes:
 
 3. **Plugin converts to block**
    - Reads comment data and metadata
-   - Creates wing-map/wing-review block
+   - Creates wing-review/wing-review block
    - Appends block to post content
    - Updates post in database
 
@@ -116,8 +109,7 @@ The block stores review data as attributes:
 1. Go to edit a wing_location post
 2. View the block editor
 3. Review blocks appear in post content
-4. First block displays location details
-5. All blocks display review content
+4. All blocks display review content
 
 ## Development
 
@@ -191,7 +183,6 @@ The `wing-review.php` file:
 - Implements `render_callback()` for server-side rendering
 - Hooks `wp_set_comment_status` for comment approval
 - Implements `convert_to_block()` to convert comments
-- Implements `is_first_review_block()` to detect first block
 - Implements `recalculate_location_stats()` to update metadata
 
 ### Key Functions
@@ -200,7 +191,6 @@ The `wing-review.php` file:
 // Render the block
 function render_callback($attributes) {
     // Extract attributes
-    // Get location details (first block only)
     // Return HTML with escaping
 }
 
@@ -220,7 +210,7 @@ function convert_to_block($comment_id, $status) {
 // Recalculate average rating and review count
 function recalculate_location_stats($post_id) {
     // Parse blocks
-    // Filter wing-review blocks
+    // Filter wing-review/wing-review blocks
     // Calculate average rating
     // Update theme metadata
 }
@@ -241,17 +231,10 @@ No custom hooks or filters provided (single responsibility).
 
 ```php
 $meta_helper = get_meta_helper();
-if ($meta_helper && $is_first_block) {
+if ($meta_helper) {
     $meta = $meta_helper::get_location_meta($post_id);
-    $address = $meta['wing_address'];
-    $phone = $meta['wing_phone'];
-    // ... etc
 }
 ```
-
-### Fallback to Block Attributes
-
-If theme unavailable, uses attributes from first review block for location details.
 
 ### Updating Theme Metadata
 
@@ -263,13 +246,13 @@ After comment conversion, recalculates and updates:
 
 - WordPress 6.0+
 - PHP 8.0+
-- Cluckin Chuck theme (for optimal data access, but not required)
+- Cluckin Chuck theme (required for data access)
 
 ## Compatibility
 
-- Works with cluckin-chuck theme (reads/updates theme metadata)
+- Requires cluckin-chuck theme (for metadata access)
 - Compatible with wing-map-display plugin (provides review data)
-- Compatible with wing-submit plugin (provides comment source)
+- Compatible with wing-review-submit plugin (provides comment source)
 
 ## Security
 
@@ -291,5 +274,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.0
+**Version**: 0.1.1
 **Last Updated**: 2025

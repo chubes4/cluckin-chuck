@@ -3,7 +3,7 @@
  * Plugin Name: Wing Map Display
  * Plugin URI: https://chubes.net
  * Description: Interactive Leaflet map block displaying all wing locations with reviews
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -52,7 +52,7 @@ function render_callback( $attributes, $content ) {
 
 	$locations = get_wing_locations();
 
-	$script_handle = 'wing-map-display-map-display-view-script';
+	$script_handle = 'wing-map-display-wing-map-display-view-script';
 
 	wp_add_inline_script(
 		$script_handle,
@@ -81,7 +81,7 @@ function enqueue_assets() {
 		true
 	);
 
-	wp_script_add_data( 'wing-map-display-map-display-view-script', 'dependencies', array( 'leaflet' ) );
+	wp_script_add_data( 'wing-map-display-wing-map-display-view-script', 'dependencies', array( 'leaflet' ) );
 }
 
 function get_wing_locations() {
@@ -98,48 +98,21 @@ function get_wing_locations() {
 	$locations = array();
 
 	foreach ( $query->posts as $post ) {
-		$lat = 0;
-		$lng = 0;
-		$address = '';
-		$avg_rating = 0;
-		$review_count = 0;
-
-		if ( $meta_helper ) {
-			$meta         = $meta_helper::get_location_meta( $post->ID );
-			$lat          = floatval( $meta['wing_latitude'] );
-			$lng          = floatval( $meta['wing_longitude'] );
-			$address      = $meta['wing_address'];
-			$avg_rating   = floatval( $meta['wing_average_rating'] );
-			$review_count = intval( $meta['wing_review_count'] );
+		if ( ! $meta_helper ) {
+			continue;
 		}
+
+		$meta         = $meta_helper::get_location_meta( $post->ID );
+		$lat          = floatval( $meta['wing_latitude'] );
+		$lng          = floatval( $meta['wing_longitude'] );
 
 		if ( empty( $lat ) || empty( $lng ) ) {
-			$blocks = parse_blocks( $post->post_content );
-
-			$wing_reviews = array_filter( $blocks, function( $block ) {
-				return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
-			} );
-
-			if ( empty( $wing_reviews ) ) {
-				continue;
-			}
-
-			$first_review = reset( $wing_reviews );
-			$lat          = floatval( $first_review['attrs']['latitude'] ?? 0 );
-			$lng          = floatval( $first_review['attrs']['longitude'] ?? 0 );
-			$address      = $first_review['attrs']['address'] ?? '';
-
-			if ( empty( $lat ) || empty( $lng ) ) {
-				continue;
-			}
-
-			$ratings = array_map( function( $block ) {
-				return floatval( $block['attrs']['rating'] ?? 0 );
-			}, $wing_reviews );
-
-			$avg_rating   = count( $ratings ) > 0 ? array_sum( $ratings ) / count( $ratings ) : 0;
-			$review_count = count( $wing_reviews );
+			continue;
 		}
+
+		$address      = $meta['wing_address'];
+		$avg_rating   = floatval( $meta['wing_average_rating'] );
+		$review_count = intval( $meta['wing_review_count'] );
 
 		$locations[] = array(
 			'id'          => $post->ID,

@@ -1,6 +1,6 @@
 {
 	"name": "wing-review",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Review block for wing locations with comment-to-block conversion",
 	"author": "Chris Huber",
 	"license": "GPL-2.0-or-later",

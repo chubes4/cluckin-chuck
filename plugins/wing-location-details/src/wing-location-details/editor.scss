@@ -1,0 +1,23 @@
+/**
+ * Wing Location Details Block - Editor Styles
+ */
+
+.wing-location-details-editor {
+	.components-placeholder {
+		min-height: 120px;
+		background: #f0f0f0;
+		border: 1px dashed #ccc;
+		border-radius: 4px;
+	}
+
+	.components-placeholder__label {
+		font-weight: 600;
+		color: #1e1e1e;
+	}
+
+	.components-placeholder__instructions {
+		color: #757575;
+		font-size: 13px;
+		max-width: 400px;
+	}
+}

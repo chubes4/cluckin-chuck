@@ -1,7 +1,7 @@
 {
-	"name": "wing-map-display",
+	"name": "wing-review-submit",
 	"version": "0.1.1",
-	"description": "Interactive Leaflet map block displaying all wing locations with reviews",
+	"description": "Frontend submission form block for new wing locations and reviews",
 	"author": "Chris Huber",
 	"license": "GPL-2.0-or-later",
 	"scripts": {

@@ -1,10 +1,10 @@
 # Cluckin Chuck: Wing Map Showcase
 
-A WordPress project combining a block theme and three separate plugins to showcase chicken wing locations across the USA with interactive Leaflet maps.
+A WordPress project combining a block theme and four separate plugins to showcase chicken wing locations across the USA with interactive Leaflet maps.
 
 ## Project Overview
 
-Cluckin Chuck demonstrates clean WordPress architecture by separating concerns: the theme owns data and presentation, while three plugins provide isolated functionality. The project features an interactive map interface for discovering wing locations, user review submission with geocoding, and modern Full Site Editing capabilities.
+Cluckin Chuck demonstrates clean WordPress architecture by separating concerns: the theme owns data and presentation, while four plugins provide isolated functionality. The project features an interactive map interface for discovering wing locations, user review submission with geocoding, and modern Full Site Editing capabilities.
 
 ## Architecture
 
@@ -21,24 +21,29 @@ This project follows the **Single Responsibility Principle** with clear separati
 - Wing sauce orange color scheme
 - Template parts (header, footer)
 
-### Three Plugins (for isolated development)
+### Four Plugins (for isolated development)
 
-1. **wing-map-display** (`/plugins/wing-map-display/`)
+1. **wing-location-details** (`/plugins/wing-location-details/`)
+   - Single responsibility: Location details hero display
+   - Block: `wing-location-details/wing-location-details`
+   - Reads location data from theme metadata
+
+2. **wing-map-display** (`/plugins/wing-map-display/`)
    - Single responsibility: Interactive map display
    - Block: `wing-map/map-display`
-   - Reads location data from theme metadata (or wing-review blocks as fallback)
+   - Reads location data from theme metadata
    - Leaflet.js map integration with OpenStreetMap
 
-2. **wing-review** (`/plugins/wing-review/`)
+3. **wing-review** (`/plugins/wing-review/`)
    - Single responsibility: Review display + comment-to-block conversion
-   - Block: `wing-map/wing-review`
+   - Block: `wing-review/wing-review`
    - Hooks into comment approval workflow
    - Converts approved comments to permanent review blocks
    - Recalculates location aggregate stats
 
-3. **wing-submit** (`/plugins/wing-submit/`)
+4. **wing-review-submit** (`/plugins/wing-review-submit/`)
    - Single responsibility: Submission form + geocoding
-   - Block: `wing-submit/wing-submit`
+   - Block: `wing-review-submit/wing-review-submit`
    - User review & location submission form
    - Nominatim geocoding service integration
    - Rate limiting, honeypot, nonce security
@@ -57,11 +62,18 @@ cluckin-chuck/
 │       ├── functions.php
 │       ├── inc/
 │       │   ├── class-wing-location.php (CPT registration)
-│       │   └── class-wing-location-meta.php (metadata management)
+│       │   ├── class-wing-location-meta.php (metadata management)
+│       │   └── geocoding.php (Nominatim geocoding)
 │       ├── templates/
 │       ├── parts/
 │       └── build.sh
 ├── plugins/
+│   ├── wing-location-details/
+│   │   ├── wing-location-details.php
+│   │   ├── src/wing-location-details/
+│   │   ├── build/wing-location-details/
+│   │   ├── package.json
+│   │   └── build.sh
 │   ├── wing-map-display/
 │   │   ├── wing-map-display.php
 │   │   ├── src/map-display/
@@ -74,10 +86,10 @@ cluckin-chuck/
 │   │   ├── build/wing-review/
 │   │   ├── package.json
 │   │   └── build.sh
-│   └── wing-submit/
-│       ├── wing-submit.php
-│       ├── src/wing-submit/
-│       ├── build/wing-submit/
+│   └── wing-review-submit/
+│       ├── wing-review-submit.php
+│       ├── src/wing-review-submit/
+│       ├── build/wing-review-submit/
 │       ├── package.json
 │       └── build.sh
 ```
@@ -104,22 +116,26 @@ cluckin-chuck/
    # Theme (no dependencies)
    cd themes/cluckin-chuck
 
-   # Plugin 1: wing-map-display
-   cd ../../plugins/wing-map-display
+   # Plugin 1: wing-location-details
+   cd ../../plugins/wing-location-details
    npm install
 
-   # Plugin 2: wing-review
+   # Plugin 2: wing-map-display
+   cd ../wing-map-display
+   npm install
+
+   # Plugin 3: wing-review
    cd ../wing-review
    npm install
 
-   # Plugin 3: wing-submit
-   cd ../wing-submit
+   # Plugin 4: wing-review-submit
+   cd ../wing-review-submit
    npm install
    ```
 
 3. **Activate components:**
    - Go to WordPress Admin → Plugins
-   - Activate: Wing Map Display, Wing Review, Wing Submit
+   - Activate: Wing Location Details, Wing Map Display, Wing Review, Wing Review Submit
    - Go to Appearance → Themes
    - Activate: Cluckin Chuck
 
@@ -151,10 +167,16 @@ chmod +x build.sh
 ./build.sh
 # Output: build/wing-map-display.zip
 
-# Repeat for wing-review and wing-submit
+# Repeat for wing-location-details, wing-review, and wing-review-submit
 ```
 
 ## Features
+
+### Wing Location Details Block (`wing-location-details/wing-location-details`)
+- Displays location hero with address, phone, hours, services
+- Shows aggregate rating and review count
+- Reads data from theme metadata
+- Provided by: **wing-location-details plugin**
 
 ### Interactive Wing Map Block (`wing-map/map-display`)
 - Leaflet.js integration with OpenStreetMap tiles
@@ -164,14 +186,13 @@ chmod +x build.sh
 - Responsive design (600px desktop, 400px mobile)
 - Provided by: **wing-map-display plugin**
 
-### User Review System (`wing-map/wing-review`)
+### User Review System (`wing-review/wing-review`)
 - Review submission form block for new locations and reviews
 - Star ratings for overall quality, sauce, and crispiness
 - Comment moderation workflow (reviews require approval)
 - Automatic conversion of approved reviews to permanent blocks
 - Security: nonce verification, honeypot spam prevention, rate limiting (1 review/hour per IP)
-- Location details display (first review block only)
-- Provided by: **wing-submit** (form) + **wing-review** (block conversion)
+- Provided by: **wing-review-submit** (form) + **wing-review** (block conversion)
 
 ### Wing Location Management
 - Custom post type with full WordPress editor support
@@ -196,7 +217,7 @@ chmod +x build.sh
 1. Go to WordPress Admin → Wing Locations → Add New
 2. Enter the location title (restaurant name)
 3. Add description and featured image
-4. Use the form block (wing-submit) to submit data with geocoding
+4. Use the form block (wing-review-submit) to submit data with geocoding
 5. Publish the location
 
 ### Displaying the Map
@@ -224,7 +245,7 @@ Or use in templates via Full Site Editing:
 - Free, open-source geocoding
 - Server-side requests only
 - 1 request/second rate limit compliance
-- User-Agent header: `WingSubmit/0.1.0 (https://chubes.net)`
+- User-Agent header: `WingReviewSubmit/0.1.0 (https://chubes.net)`
 
 ### Build Process
 - **Plugins**: npm (wp-scripts) for block compilation
@@ -236,9 +257,10 @@ Or use in templates via Full Site Editing:
 
 - **AGENTS.md** - Development standards and architecture reference
 - **plan.md** - Implementation reference and architectural decisions
+- **plugins/wing-location-details/README.md** - Location details block documentation
 - **plugins/wing-map-display/README.md** - Map block documentation
 - **plugins/wing-review/README.md** - Review block documentation
-- **plugins/wing-submit/README.md** - Submission form documentation
+- **plugins/wing-review-submit/README.md** - Submission form documentation
 - **themes/cluckin-chuck/README.md** - Theme documentation
 
 ## Clean Architecture Principles
@@ -258,7 +280,7 @@ Or use in templates via Full Site Editing:
 - No duplicate data storage
 - Plugins consume what theme provides
 
-### Three-Plugin Split Benefits
+### Four-Plugin Split Benefits
 - **Isolated development** - Work on plugins independently
 - **Clear responsibilities** - Each plugin has one job
 - **Easy testing** - Test each plugin separately
@@ -268,16 +290,10 @@ Or use in templates via Full Site Editing:
 
 ### Data Flow
 1. **Theme** registers CPT and owns all location metadata
-2. **wing-submit** plugin collects user submissions and saves to theme meta
+2. **wing-review-submit** plugin collects user submissions and saves to theme meta
 3. **wing-review** plugin converts approved comments to review blocks
-4. **wing-map-display** plugin queries locations and renders interactive map
-
-### Fallback Strategy
-If theme metadata unavailable, plugins fall back to data in wing-review blocks:
-- wing-map-display reads coordinates from first review block
-- wing-submit reads location details from first review block
-
-This ensures the system works even if theme is disabled, though theme provides primary data source.
+4. **wing-location-details** plugin displays location hero from theme meta
+5. **wing-map-display** plugin queries locations and renders interactive map
 
 ## Future Extensibility
 
@@ -311,7 +327,3 @@ This ensures the system works even if theme is disabled, though theme provides p
 ## License
 
 GPL v2 or later
-
----
-
-Built with love for chicken wing enthusiasts across the USA 🍗

@@ -3,7 +3,7 @@
  * Plugin Name: Wing Review
  * Plugin URI: https://chubes.net
  * Description: Review block for wing locations with comment-to-block conversion on approval
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -23,6 +23,9 @@ define( 'WING_REVIEW_VERSION', '0.1.0' );
 define( 'WING_REVIEW_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_URL', plugin_dir_url( __FILE__ ) );
 
+/**
+ * Get the theme's meta helper class if available
+ */
 function get_meta_helper() {
 	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
 		return null;
@@ -30,6 +33,9 @@ function get_meta_helper() {
 	return '\\CluckinChuck\\Wing_Location_Meta';
 }
 
+/**
+ * Register the block
+ */
 function register_block() {
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
@@ -50,6 +56,23 @@ add_action( 'init', __NAMESPACE__ . '\\register_block' );
 add_action( 'wp_set_comment_status', __NAMESPACE__ . '\\convert_to_block', 10, 2 );
 
 /**
+ * Recalculate stats when wing_location post is saved (editor changes to wing-review blocks)
+ */
+add_action( 'save_post_wing_location', __NAMESPACE__ . '\\on_save_post', 10, 2 );
+
+function on_save_post( $post_id, $post ) {
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( wp_is_post_revision( $post_id ) ) {
+		return;
+	}
+
+	recalculate_location_stats( $post_id );
+}
+
+/**
  * Render the wing review block on the frontend
  */
 function render_callback( $attributes ) {
@@ -59,43 +82,6 @@ function render_callback( $attributes ) {
 	$crispiness_rating = floatval( $attributes['crispinessRating'] ?? 0 );
 	$review_text       = wp_kses_post( $attributes['reviewText'] ?? '' );
 	$timestamp         = esc_html( $attributes['timestamp'] ?? '' );
-
-	$is_first_block = is_first_review_block();
-
-	$address     = '';
-	$phone       = '';
-	$website     = '';
-	$hours       = '';
-	$price_range = '';
-	$takeout     = false;
-	$delivery    = false;
-	$dine_in     = false;
-
-	if ( $is_first_block ) {
-		$meta_helper = get_meta_helper();
-		$post_id     = get_the_ID();
-
-		if ( $meta_helper && $post_id ) {
-			$meta        = $meta_helper::get_location_meta( $post_id );
-			$address     = esc_html( $meta['wing_address'] );
-			$phone       = esc_html( $meta['wing_phone'] );
-			$website     = esc_url( $meta['wing_website'] );
-			$hours       = esc_html( $meta['wing_hours'] );
-			$price_range = esc_html( $meta['wing_price_range'] );
-			$takeout     = (bool) $meta['wing_takeout'];
-			$delivery    = (bool) $meta['wing_delivery'];
-			$dine_in     = (bool) $meta['wing_dine_in'];
-		} else {
-			$address     = esc_html( $attributes['address'] ?? '' );
-			$phone       = esc_html( $attributes['phone'] ?? '' );
-			$website     = esc_url( $attributes['website'] ?? '' );
-			$hours       = esc_html( $attributes['hours'] ?? '' );
-			$price_range = esc_html( $attributes['priceRange'] ?? '' );
-			$takeout     = ! empty( $attributes['takeout'] );
-			$delivery    = ! empty( $attributes['delivery'] );
-			$dine_in     = ! empty( $attributes['dineIn'] );
-		}
-	}
 
 	$full_stars  = str_repeat( '★', (int) round( $rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $rating ) );
@@ -135,74 +121,9 @@ function render_callback( $attributes ) {
 		<?php if ( $review_text ) : ?>
 			<div class="wing-review-text"><?php echo $review_text; ?></div>
 		<?php endif; ?>
-
-		<?php if ( $is_first_block && ( $address || $phone || $website || $hours || $price_range ) ) : ?>
-			<div class="wing-location-details">
-				<?php if ( $address ) : ?>
-					<div class="wing-location-address">
-						<strong><?php esc_html_e( 'Address:', 'wing-review' ); ?></strong> <?php echo $address; ?>
-					</div>
-				<?php endif; ?>
-				<?php if ( $phone ) : ?>
-					<div class="wing-location-phone">
-						<strong><?php esc_html_e( 'Phone:', 'wing-review' ); ?></strong>
-						<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo $phone; ?></a>
-					</div>
-				<?php endif; ?>
-				<?php if ( $website ) : ?>
-					<div class="wing-location-website">
-						<strong><?php esc_html_e( 'Website:', 'wing-review' ); ?></strong>
-						<a href="<?php echo $website; ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( parse_url( $website, PHP_URL_HOST ) ); ?></a>
-					</div>
-				<?php endif; ?>
-				<?php if ( $hours ) : ?>
-					<div class="wing-location-hours">
-						<strong><?php esc_html_e( 'Hours:', 'wing-review' ); ?></strong>
-						<span><?php echo nl2br( $hours ); ?></span>
-					</div>
-				<?php endif; ?>
-				<?php if ( $price_range ) : ?>
-					<div class="wing-location-price">
-						<strong><?php esc_html_e( 'Price:', 'wing-review' ); ?></strong> <?php echo $price_range; ?>
-					</div>
-				<?php endif; ?>
-				<?php if ( $takeout || $delivery || $dine_in ) : ?>
-					<div class="wing-location-services">
-						<strong><?php esc_html_e( 'Services:', 'wing-review' ); ?></strong>
-						<?php
-						$services = array();
-						if ( $takeout ) {
-							$services[] = __( 'Takeout', 'wing-review' );
-						}
-						if ( $delivery ) {
-							$services[] = __( 'Delivery', 'wing-review' );
-						}
-						if ( $dine_in ) {
-							$services[] = __( 'Dine-in', 'wing-review' );
-						}
-						echo esc_html( implode( ', ', $services ) );
-						?>
-					</div>
-				<?php endif; ?>
-			</div>
-		<?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();
-}
-
-/**
- * Check if current block is the first wing-review block in the post
- */
-function is_first_review_block() {
-	static $is_first = true;
-
-	if ( $is_first ) {
-		$is_first = false;
-		return true;
-	}
-
-	return false;
 }
 
 /**
@@ -229,7 +150,7 @@ function convert_to_block( $comment_id, $status ) {
 
 	$block_content = serialize_block(
 		array(
-			'blockName' => 'wing-map/wing-review',
+			'blockName' => 'wing-review/wing-review',
 			'attrs'     => array(
 				'reviewerName'     => $comment->comment_author,
 				'reviewerEmail'    => $comment->comment_author_email,
@@ -270,7 +191,7 @@ function recalculate_location_stats( $post_id ) {
 	$blocks = parse_blocks( $post->post_content );
 
 	$wing_reviews = array_filter( $blocks, function( $block ) {
-		return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
+		return 'wing-review/wing-review' === ( $block['blockName'] ?? '' );
 	} );
 
 	$review_count = count( $wing_reviews );

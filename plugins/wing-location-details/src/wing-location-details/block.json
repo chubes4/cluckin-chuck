@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "wing-location-details/wing-location-details",
+	"title": "Wing Location Details",
+	"category": "widgets",
+	"icon": "store",
+	"description": "Displays wing location details including address, phone, hours, services, and ratings",
+	"keywords": ["location", "details", "wings", "restaurant", "hero"],
+	"textdomain": "wing-location-details",
+	"supports": {
+		"html": false,
+		"multiple": false
+	},
+	"attributes": {},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css",
+	"style": "file:./style.css"
+}

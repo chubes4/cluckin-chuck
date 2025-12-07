@@ -1,28 +1,31 @@
 <?php
 /**
- * Plugin Name: Wing Submit
+ * Plugin Name: Wing Review Submit
  * Plugin URI: https://chubes.net
- * Description: Submission form block for new wing locations and reviews with geocoding
- * Version: 0.1.0
+ * Description: Frontend submission form block for new wing locations and reviews
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
  * Author URI: https://chubes.net
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: wing-submit
+ * Text Domain: wing-review-submit
  */
 
-namespace WingSubmit;
+namespace WingReviewSubmit;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_SUBMIT_VERSION', '0.1.0' );
-define( 'WING_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
-define( 'WING_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
+define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.0' );
+define( 'WING_REVIEW_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WING_REVIEW_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
+/**
+ * Get the theme's meta helper class if available.
+ */
 function get_meta_helper() {
 	if ( ! class_exists( '\\CluckinChuck\\Wing_Location_Meta' ) ) {
 		return null;
@@ -31,92 +34,66 @@ function get_meta_helper() {
 	return '\\CluckinChuck\\Wing_Location_Meta';
 }
 
-function map_meta_input( $data ) {
-	return array(
-		'wing_address'        => $data['address'] ?? '',
-		'wing_latitude'       => $data['latitude'] ?? 0,
-		'wing_longitude'      => $data['longitude'] ?? 0,
-		'wing_phone'          => $data['phone'] ?? '',
-		'wing_website'        => $data['website'] ?? '',
-		'wing_hours'          => $data['hours'] ?? '',
-		'wing_price_range'    => $data['price_range'] ?? '',
-		'wing_takeout'        => $data['takeout'] ?? false,
-		'wing_delivery'       => $data['delivery'] ?? false,
-		'wing_dine_in'        => $data['dine_in'] ?? false,
-		'wing_average_rating' => floatval( $data['rating'] ?? 0 ),
-		'wing_review_count'   => 1,
-	);
+/**
+ * Get the theme's geocoding function if available.
+ */
+function geocode_address( $address ) {
+	if ( ! function_exists( '\\CluckinChuck\\geocode_address' ) ) {
+		return false;
+	}
+
+	return \CluckinChuck\geocode_address( $address );
 }
 
+/**
+ * Get location info from post meta.
+ */
 function get_location_info_for_post( $post_id ) {
 	$meta_helper = get_meta_helper();
 
-	if ( $meta_helper ) {
-		$meta = $meta_helper::get_location_meta( $post_id );
-
-		return array(
-			'address'    => $meta['wing_address'] ?? '',
-			'latitude'   => $meta['wing_latitude'] ?? 0,
-			'longitude'  => $meta['wing_longitude'] ?? 0,
-			'phone'      => $meta['wing_phone'] ?? '',
-			'website'    => $meta['wing_website'] ?? '',
-			'hours'      => $meta['wing_hours'] ?? '',
-			'priceRange' => $meta['wing_price_range'] ?? '',
-			'takeout'    => $meta['wing_takeout'] ?? false,
-			'delivery'   => $meta['wing_delivery'] ?? false,
-			'dineIn'     => $meta['wing_dine_in'] ?? false,
-		);
-	}
-
-	$post_content = get_post_field( 'post_content', $post_id );
-	$blocks       = parse_blocks( $post_content );
-
-	$wing_reviews = array_filter( $blocks, function( $block ) {
-		return 'wing-map/wing-review' === ( $block['blockName'] ?? '' );
-	} );
-
-	if ( empty( $wing_reviews ) ) {
+	if ( ! $meta_helper ) {
 		return array();
 	}
 
-	$first_review = reset( $wing_reviews );
-	$attrs        = $first_review['attrs'] ?? array();
+	$meta = $meta_helper::get_location_meta( $post_id );
 
 	return array(
-		'address'    => $attrs['address'] ?? '',
-		'latitude'   => $attrs['latitude'] ?? 0,
-		'longitude'  => $attrs['longitude'] ?? 0,
-		'phone'      => $attrs['phone'] ?? '',
-		'website'    => $attrs['website'] ?? '',
-		'hours'      => $attrs['hours'] ?? '',
-		'priceRange' => $attrs['priceRange'] ?? '',
-		'takeout'    => $attrs['takeout'] ?? false,
-		'delivery'   => $attrs['delivery'] ?? false,
-		'dineIn'     => $attrs['dineIn'] ?? false,
+		'address'    => $meta['wing_address'] ?? '',
+		'latitude'   => $meta['wing_latitude'] ?? 0,
+		'longitude'  => $meta['wing_longitude'] ?? 0,
+		'phone'      => $meta['wing_phone'] ?? '',
+		'website'    => $meta['wing_website'] ?? '',
+		'hours'      => $meta['wing_hours'] ?? '',
+		'priceRange' => $meta['wing_price_range'] ?? '',
+		'takeout'    => $meta['wing_takeout'] ?? false,
+		'delivery'   => $meta['wing_delivery'] ?? false,
+		'dineIn'     => $meta['wing_dine_in'] ?? false,
 	);
 }
 
+/**
+ * Register the block.
+ */
 function register_block() {
-
-
-
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
 	}
 
 	register_block_type(
-		WING_SUBMIT_PATH . 'build/wing-submit',
+		WING_REVIEW_SUBMIT_PATH . 'build/wing-review-submit',
 		array(
 			'render_callback' => __NAMESPACE__ . '\\render_callback',
 		)
 	);
 }
 add_action( 'init', __NAMESPACE__ . '\\register_block' );
-add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
 
+/**
+ * Register REST API routes.
+ */
 function register_rest_routes() {
 	register_rest_route(
-		'wing-submit/v1',
+		'wing-review-submit/v1',
 		'/submit',
 		array(
 			'methods'             => 'POST',
@@ -128,7 +105,7 @@ function register_rest_routes() {
 	);
 
 	register_rest_route(
-		'wing-submit/v1',
+		'wing-review-submit/v1',
 		'/geocode',
 		array(
 			'methods'             => 'POST',
@@ -139,14 +116,18 @@ function register_rest_routes() {
 		)
 	);
 }
+add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
 
+/**
+ * Render the block on the frontend.
+ */
 function render_callback() {
-	$script_handle = 'wing-submit-wing-submit-view-script';
+	$script_handle = 'wing-review-submit-wing-review-submit-view-script';
 
 	wp_add_inline_script(
 		$script_handle,
-		'window.wingSubmitData = ' . wp_json_encode( array(
-			'restUrl' => rest_url( 'wing-submit/v1' ),
+		'window.wingReviewSubmitData = ' . wp_json_encode( array(
+			'restUrl' => rest_url( 'wing-review-submit/v1' ),
 			'nonce'   => wp_create_nonce( 'wp_rest' ),
 		) ),
 		'before'
@@ -164,9 +145,9 @@ function render_callback() {
 
 	ob_start();
 	?>
-	<div class="wing-submit-block">
+	<div class="wing-review-submit-block">
 		<button
-			class="wing-submit-button"
+			class="wing-review-submit-button"
 			type="button"
 			<?php if ( ! empty( $location_data ) ) : ?>
 			data-location-info="<?php echo esc_attr( wp_json_encode( $location_data ) ); ?>"
@@ -176,7 +157,7 @@ function render_callback() {
 		</button>
 	</div>
 
-	<div id="wing-submit-modal" class="wing-submit-modal">
+	<div id="wing-review-submit-modal" class="wing-review-submit-modal">
 		<div class="wing-modal-overlay"></div>
 		<div class="wing-modal-content">
 			<div class="wing-modal-header">
@@ -185,7 +166,7 @@ function render_callback() {
 			</div>
 			<div class="wing-modal-body">
 				<div id="wing-form-messages"></div>
-				<form id="wing-submit-form">
+				<form id="wing-review-submit-form">
 					<?php if ( ! $is_singular_location ) : ?>
 					<div class="wing-form-field">
 						<label for="wing_location_name">Location Name <span class="required">*</span></label>
@@ -240,6 +221,7 @@ function render_callback() {
 						<textarea id="wing_review_text" name="wing_review_text" required></textarea>
 					</div>
 
+					<?php if ( ! $is_singular_location ) : ?>
 					<div class="wing-form-field">
 						<label for="wing_address">Address <span class="required">*</span></label>
 						<input type="text" id="wing_address" name="wing_address" required>
@@ -283,6 +265,7 @@ function render_callback() {
 							<label><input type="checkbox" name="wing_dine_in" value="1"> Dine-in</label>
 						</div>
 					</div>
+					<?php endif; ?>
 
 					<div class="wing-honeypot">
 						<input type="text" name="wing_website_url" tabindex="-1" autocomplete="off">
@@ -301,6 +284,9 @@ function render_callback() {
 	return ob_get_clean();
 }
 
+/**
+ * Handle geocoding REST request.
+ */
 function rest_geocode_handler( \WP_REST_Request $request ) {
 	$address = sanitize_text_field( $request->get_param( 'address' ) ?? '' );
 
@@ -317,43 +303,9 @@ function rest_geocode_handler( \WP_REST_Request $request ) {
 	return new \WP_REST_Response( array( 'message' => 'Could not geocode address' ), 400 );
 }
 
-function geocode_address( $address ) {
-	$url = add_query_arg(
-		array(
-			'q'      => rawurlencode( $address ),
-			'format' => 'json',
-			'limit'  => 1,
-		),
-		'https://nominatim.openstreetmap.org/search'
-	);
-
-	$response = wp_remote_get(
-		$url,
-		array(
-			'headers' => array(
-				'User-Agent' => 'WingSubmit/0.1.0 (https://chubes.net)',
-			),
-			'timeout' => 10,
-		)
-	);
-
-	if ( is_wp_error( $response ) ) {
-		return false;
-	}
-
-	$body = wp_remote_retrieve_body( $response );
-	$data = json_decode( $body, true );
-
-	if ( ! empty( $data[0]['lat'] ) && ! empty( $data[0]['lon'] ) ) {
-		return array(
-			'lat' => floatval( $data[0]['lat'] ),
-			'lng' => floatval( $data[0]['lon'] ),
-		);
-	}
-
-	return false;
-}
-
+/**
+ * Handle form submission REST request.
+ */
 function rest_submit_handler( \WP_REST_Request $request ) {
 	$params = $request->get_params();
 
@@ -362,7 +314,7 @@ function rest_submit_handler( \WP_REST_Request $request ) {
 	}
 
 	$ip_hash       = md5( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
-	$transient_key = 'wing_submit_' . $ip_hash;
+	$transient_key = 'wing_review_submit_' . $ip_hash;
 
 	if ( get_transient( $transient_key ) ) {
 		return new \WP_REST_Response( array( 'message' => 'Please wait before submitting again' ), 429 );
@@ -394,6 +346,9 @@ function rest_submit_handler( \WP_REST_Request $request ) {
 	);
 }
 
+/**
+ * Sanitize form data from submission.
+ */
 function sanitize_form_data( $post_data ) {
 	return array(
 		'post_id'           => intval( $post_data['wing_post_id'] ?? 0 ),
@@ -417,18 +372,41 @@ function sanitize_form_data( $post_data ) {
 	);
 }
 
+/**
+ * Validate required form fields.
+ */
 function validate_form_data( $data ) {
-	if ( empty( $data['reviewer_name'] ) ) return false;
-	if ( empty( $data['reviewer_email'] ) ) return false;
-	if ( empty( $data['rating'] ) || $data['rating'] < 1 || $data['rating'] > 5 ) return false;
-	if ( empty( $data['review_text'] ) ) return false;
-	if ( empty( $data['address'] ) ) return false;
-	if ( empty( $data['latitude'] ) || empty( $data['longitude'] ) ) return false;
-	if ( empty( $data['post_id'] ) && empty( $data['location_name'] ) ) return false;
+	if ( empty( $data['reviewer_name'] ) ) {
+		return false;
+	}
+	if ( empty( $data['reviewer_email'] ) ) {
+		return false;
+	}
+	if ( empty( $data['rating'] ) || $data['rating'] < 1 || $data['rating'] > 5 ) {
+		return false;
+	}
+	if ( empty( $data['review_text'] ) ) {
+		return false;
+	}
+
+	if ( empty( $data['post_id'] ) ) {
+		if ( empty( $data['location_name'] ) ) {
+			return false;
+		}
+		if ( empty( $data['address'] ) ) {
+			return false;
+		}
+		if ( empty( $data['latitude'] ) || empty( $data['longitude'] ) ) {
+			return false;
+		}
+	}
 
 	return true;
 }
 
+/**
+ * Create a pending comment for review on existing location.
+ */
 function create_pending_review_comment( $post_id, $data ) {
 	$comment_data = array(
 		'comment_post_ID'      => $post_id,
@@ -445,11 +423,6 @@ function create_pending_review_comment( $post_id, $data ) {
 		return new \WP_Error( 'comment_failed', 'Failed to create review' );
 	}
 
-	$meta_helper = get_meta_helper();
-	if ( $meta_helper ) {
-		$meta_helper::update_location_meta( $post_id, map_meta_input( $data ) );
-	}
-
 	add_comment_meta( $comment_id, 'wing_rating', $data['rating'] );
 	add_comment_meta( $comment_id, 'wing_sauce_rating', $data['sauce_rating'] );
 	add_comment_meta( $comment_id, 'wing_crispiness_rating', $data['crispiness_rating'] );
@@ -459,9 +432,12 @@ function create_pending_review_comment( $post_id, $data ) {
 	return $comment_id;
 }
 
+/**
+ * Create a new pending wing location with initial review.
+ */
 function create_pending_location( $data ) {
-	$block_content = sprintf(
-		'<!-- wp:wing-map/wing-review %s /-->',
+	$review_block = sprintf(
+		'<!-- wp:wing-review/wing-review %s /-->',
 		wp_json_encode( array(
 			'reviewerName'     => $data['reviewer_name'],
 			'reviewerEmail'    => $data['reviewer_email'],
@@ -470,22 +446,16 @@ function create_pending_location( $data ) {
 			'crispinessRating' => $data['crispiness_rating'],
 			'reviewText'       => $data['review_text'],
 			'timestamp'        => current_time( 'mysql' ),
-			'address'          => $data['address'],
-			'latitude'         => $data['latitude'],
-			'longitude'        => $data['longitude'],
-			'phone'            => $data['phone'],
-			'website'          => $data['website'],
-			'hours'            => $data['hours'],
-			'priceRange'       => $data['price_range'],
-			'takeout'          => $data['takeout'],
-			'delivery'         => $data['delivery'],
-			'dineIn'           => $data['dine_in'],
 		) )
 	);
 
+	$location_details_block = '<!-- wp:wing-location-details/wing-location-details /-->';
+
+	$post_content = $location_details_block . "\n\n" . $review_block;
+
 	$post_id = wp_insert_post( array(
 		'post_title'   => $data['location_name'],
-		'post_content' => $block_content,
+		'post_content' => $post_content,
 		'post_type'    => 'wing_location',
 		'post_status'  => 'pending',
 	) );
@@ -496,7 +466,20 @@ function create_pending_location( $data ) {
 
 	$meta_helper = get_meta_helper();
 	if ( $meta_helper ) {
-		$meta_helper::update_location_meta( $post_id, map_meta_input( $data ) );
+		$meta_helper::update_location_meta( $post_id, array(
+			'wing_address'        => $data['address'],
+			'wing_latitude'       => $data['latitude'],
+			'wing_longitude'      => $data['longitude'],
+			'wing_phone'          => $data['phone'],
+			'wing_website'        => $data['website'],
+			'wing_hours'          => $data['hours'],
+			'wing_price_range'    => $data['price_range'],
+			'wing_takeout'        => $data['takeout'],
+			'wing_delivery'       => $data['delivery'],
+			'wing_dine_in'        => $data['dine_in'],
+			'wing_average_rating' => floatval( $data['rating'] ),
+			'wing_review_count'   => 1,
+		) );
 	}
 
 	send_admin_email( 'location', $data, $data['location_name'] );
@@ -504,6 +487,9 @@ function create_pending_location( $data ) {
 	return $post_id;
 }
 
+/**
+ * Send notification email to admin.
+ */
 function send_admin_email( $type, $data, $location_name ) {
 	$admin_email = get_option( 'admin_email' );
 

@@ -1,0 +1,16 @@
+{
+	"name": "cluckin-chuck-theme",
+	"version": "0.1.1",
+	"description": "Cluckin Chuck block theme with wing location management",
+	"author": "Chris Huber",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build src/location-meta-panel/index.js --output-path=build/location-meta-panel",
+		"start": "wp-scripts start src/location-meta-panel/index.js --output-path=build/location-meta-panel",
+		"lint:js": "wp-scripts lint-js",
+		"format:js": "wp-scripts format"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.0.0"
+	}
+}

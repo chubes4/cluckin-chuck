@@ -222,12 +222,13 @@ function render_callback( $attributes, $content ) {
 - No admin-ajax.php endpoints
 - Plugins register REST routes via `register_rest_route()`
 
-### Nominatim Geocoding (wing-review-submit)
+### Nominatim Geocoding (theme-owned)
 - **Service**: OpenStreetMap Nominatim API
 - **Endpoint**: `https://nominatim.openstreetmap.org/search`
 - **Rate limit**: 1 request/second (enforced server-side)
-- **User-Agent**: `WingReviewSubmit/0.1.0 (https://chubes.net)`
+- **User-Agent**: `CluckinChuck/0.1.0 (https://chubes.net)`
 - **Server-side only** - never client-side requests
+- **Caching**: Results cached for 24 hours using transients
 
 ## Key Resources
 

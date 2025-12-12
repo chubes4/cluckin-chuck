@@ -125,7 +125,12 @@ class Wing_Location {
             'public' => true,
             'show_in_rest' => true,
             'rewrite' => ['slug' => 'wings'],
-            'supports' => ['title', 'editor', 'thumbnail'],
+            'supports' => ['title', 'editor', 'thumbnail', 'comments', 'custom-fields'],
+            'template' => [
+                ['wing-location-details/wing-location-details'],
+                ['wing-review/wing-review']
+            ],
+            'template_lock' => 'all'
         ]);
     }
 }
@@ -134,7 +139,8 @@ class Wing_Location {
 **Features**:
 - Post type slug: `wings`
 - Public archive and REST API enabled
-- Supports title, editor (block editor), thumbnail
+- Supports title, editor (block editor), thumbnail, comments, custom-fields
+- Locked template with location details and review blocks
 
 ### Metadata Management
 **File**: `themes/cluckin-chuck/inc/class-wing-location-meta.php`
@@ -379,7 +385,7 @@ Provide a form block for users to submit new wing locations or reviews for exist
 ### Responsibility (Single)
 - Register and render the `wing-review-submit/wing-review-submit` block
 - Provide submission form for new locations or reviews
-- Integrate Nominatim geocoding (server-side)
+- Use theme's Nominatim geocoding service (server-side)
 - Implement rate limiting (1 review per IP per hour)
 - Implement honeypot spam prevention
 - Handle nonce verification
@@ -424,7 +430,7 @@ function map_meta_input($data) {
 - **Endpoint**: `https://nominatim.openstreetmap.org/search`
 - **Server-side only** - never client-side requests
 - **Rate limit**: 1 request/second (enforced by server)
-- **User-Agent**: `WingReviewSubmit/0.1.0 (https://chubes.net)`
+- **User-Agent**: `CluckinChuck/0.1.0 (https://chubes.net)`
 
 ### Security Features
 

@@ -72,6 +72,14 @@ The theme includes the following templates:
 - **single-wing_location.html** - Individual wing location display
 - **archive-wing_location.html** - Grid view of all wing locations
 
+### Template Locking
+
+The `wing_location` custom post type has a locked template that automatically includes:
+- `wing-location-details/wing-location-details` block (location hero)
+- `wing-review/wing-review` block (review display)
+
+This ensures consistent presentation across all wing locations while allowing additional content via the post editor.
+
 ## Template Parts
 
 - **header.html** - Site header with logo and navigation

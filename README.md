@@ -214,11 +214,18 @@ chmod +x build.sh
 
 ### Adding Wing Locations
 
+**Option 1: Admin Creation**
 1. Go to WordPress Admin → Wing Locations → Add New
 2. Enter the location title (restaurant name)
 3. Add description and featured image
-4. Use the form block (wing-review-submit) to submit data with geocoding
+4. The location details and review blocks are automatically included
 5. Publish the location
+
+**Option 2: User Submission**
+1. Add the Wing Review Submit block to any page
+2. Users can submit new locations via the frontend form
+3. Submissions create pending posts for admin approval
+4. Admin reviews and publishes approved locations
 
 ### Displaying the Map
 
@@ -245,7 +252,7 @@ Or use in templates via Full Site Editing:
 - Free, open-source geocoding
 - Server-side requests only
 - 1 request/second rate limit compliance
-- User-Agent header: `WingReviewSubmit/0.1.0 (https://chubes.net)`
+- User-Agent header: `CluckinChuck/0.1.0 (https://chubes.net)`
 
 ### Build Process
 - **Plugins**: npm (wp-scripts) for block compilation

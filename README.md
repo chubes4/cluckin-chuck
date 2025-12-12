@@ -29,10 +29,10 @@ This project follows the **Single Responsibility Principle** with clear separati
    - Reads location data from theme metadata
 
 2. **wing-map-display** (`/plugins/wing-map-display/`)
-   - Single responsibility: Interactive map display
-   - Block: `wing-map/map-display`
-   - Reads location data from theme metadata
-   - Leaflet.js map integration with OpenStreetMap
+    - Single responsibility: Interactive map display
+    - Block: `wing-map-display/wing-map-display`
+    - Reads data from theme metadata
+    - Leaflet.js map integration with OpenStreetMap
 
 3. **wing-review** (`/plugins/wing-review/`)
    - Single responsibility: Review display + comment-to-block conversion
@@ -173,12 +173,12 @@ chmod +x build.sh
 ## Features
 
 ### Wing Location Details Block (`wing-location-details/wing-location-details`)
-- Displays location hero with address, phone, hours, services
+- Displays location hero with address, website, Instagram, ratings, and price per wing
 - Shows aggregate rating and review count
 - Reads data from theme metadata
 - Provided by: **wing-location-details plugin**
 
-### Interactive Wing Map Block (`wing-map/map-display`)
+### Interactive Wing Map Block (`wing-map-display/wing-map-display`)
 - Leaflet.js integration with OpenStreetMap tiles
 - Custom chicken wing marker icons
 - Auto-fitting map bounds to show all locations
@@ -199,8 +199,8 @@ chmod +x build.sh
 - Comprehensive metadata fields:
   - Location & coordinates (geocoded via Nominatim)
   - Ratings (overall, sauce quality, crispiness)
-  - Contact information (phone, website, email)
-  - Business details (hours, price range, services)
+  - Contact information (website, Instagram)
+  - Pricing data (price per wing calculations)
 - Owned by: **cluckin-chuck theme**
 
 ### Full Site Editing Theme

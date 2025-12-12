@@ -20,6 +20,8 @@ This plugin provides a review display block and hooks into the comment approval 
   - Reviewer name and date
   - Overall rating (star visualization)
   - Sub-ratings: Sauce quality, Crispiness
+  - Sauces tried
+  - Wing count and total price with calculated price per wing
   - Review text with proper escaping
   - Responsive layout
 
@@ -68,14 +70,9 @@ The block stores review data as attributes:
   "crispinessRating": 5,
   "reviewText": "Great wings!",
   "timestamp": "2025-01-15 14:30:00",
-  "address": "123 Main St",
-  "phone": "(555) 123-4567",
-  "website": "https://example.com",
-  "hours": "Mon-Fri 11am-10pm",
-  "priceRange": "$$",
-  "takeout": true,
-  "delivery": true,
-  "dineIn": true
+  "saucesTried": "Buffalo, BBQ",
+  "wingCount": 10,
+  "totalPrice": 15.00
 }
 ```
 
@@ -274,5 +271,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.1
+**Version**: 0.1.2
 **Last Updated**: 2025

@@ -49,8 +49,13 @@ class Wing_Location {
 			'hierarchical'        => false,
 			'menu_position'       => 2,
 			'menu_icon'           => 'dashicons-location',
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'comments' ),
+			'supports'            => array( 'title', 'editor', 'thumbnail', 'comments', 'custom-fields' ),
 			'description'         => __( 'Chicken wing restaurant locations', 'cluckin-chuck' ),
+			'template'            => array(
+				array( 'wing-location-details/wing-location-details' ),
+				array( 'wing-review/wing-review' ),
+			),
+			'template_lock'       => 'all',
 		);
 
 		register_post_type( 'wing_location', $args );

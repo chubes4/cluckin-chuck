@@ -3,6 +3,11 @@
 # Cluckin Chuck Theme Build Script
 # Creates production-ready theme package
 
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "🍗 Building Cluckin Chuck Theme..."
 
 # Clean previous builds
@@ -25,6 +30,11 @@ echo "Copying templates, parts, and inc..."
 cp -r templates build/cluckin-chuck/
 cp -r parts build/cluckin-chuck/
 cp -r inc build/cluckin-chuck/
+
+# Copy editor build assets
+echo "Copying editor build assets..."
+mkdir -p build/cluckin-chuck/build
+cp -r build/location-meta-panel build/cluckin-chuck/build/
 
 # Create ZIP file
 echo "Creating ZIP archive..."

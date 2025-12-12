@@ -39,6 +39,18 @@
 		"timestamp": {
 			"type": "string",
 			"default": ""
+		},
+		"saucesTried": {
+			"type": "string",
+			"default": ""
+		},
+		"wingCount": {
+			"type": "number",
+			"default": 0
+		},
+		"totalPrice": {
+			"type": "number",
+			"default": 0
 		}
 	},
 	"editorScript": "file:./index.js",

@@ -182,12 +182,14 @@
 
 .wing-rating-input {
 	display: flex;
-	gap: 8px;
+	flex-direction: row-reverse;
+	justify-content: flex-end;
+	gap: 4px;
 
 	input[type="radio"] {
 		display: none;
 
-		&:checked + label {
+		&:checked ~ label {
 			color: #d35400;
 		}
 	}
@@ -196,10 +198,11 @@
 		font-size: 28px;
 		cursor: pointer;
 		color: #ccc;
-		transition: color 0.2s ease;
+		transition: color 0.15s ease;
 		margin: 0;
 
-		&:hover {
+		&:hover,
+		&:hover ~ label {
 			color: #d35400;
 		}
 	}

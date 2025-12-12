@@ -3,7 +3,7 @@
  * Plugin Name: Wing Review
  * Plugin URI: https://chubes.net
  * Description: Review block for wing locations with comment-to-block conversion on approval
- * Version: 0.1.1
+ * Version: 0.1.2
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_REVIEW_VERSION', '0.1.0' );
+define( 'WING_REVIEW_VERSION', '0.1.2' );
 define( 'WING_REVIEW_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_URL', plugin_dir_url( __FILE__ ) );
 
@@ -82,6 +82,10 @@ function render_callback( $attributes ) {
 	$crispiness_rating = floatval( $attributes['crispinessRating'] ?? 0 );
 	$review_text       = wp_kses_post( $attributes['reviewText'] ?? '' );
 	$timestamp         = esc_html( $attributes['timestamp'] ?? '' );
+	$sauces_tried      = esc_html( $attributes['saucesTried'] ?? '' );
+	$wing_count        = intval( $attributes['wingCount'] ?? 0 );
+	$total_price       = floatval( $attributes['totalPrice'] ?? 0 );
+	$price_per_wing    = $wing_count > 0 ? round( $total_price / $wing_count, 2 ) : 0;
 
 	$full_stars  = str_repeat( '★', (int) round( $rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $rating ) );
@@ -118,6 +122,26 @@ function render_callback( $attributes ) {
 			</div>
 		<?php endif; ?>
 
+		<?php if ( $wing_count > 0 && $total_price > 0 ) : ?>
+			<div class="wing-review-pricing">
+				<span class="wing-pricing-detail">
+					<strong><?php esc_html_e( 'Wings:', 'wing-review' ); ?></strong> <?php echo esc_html( $wing_count ); ?>
+				</span>
+				<span class="wing-pricing-detail">
+					<strong><?php esc_html_e( 'Price:', 'wing-review' ); ?></strong> $<?php echo esc_html( number_format( $total_price, 2 ) ); ?>
+				</span>
+				<span class="wing-pricing-detail wing-ppw">
+					<strong><?php esc_html_e( 'PPW:', 'wing-review' ); ?></strong> $<?php echo esc_html( number_format( $price_per_wing, 2 ) ); ?>
+				</span>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $sauces_tried ) : ?>
+			<div class="wing-review-sauces">
+				<strong><?php esc_html_e( 'Sauces Tried:', 'wing-review' ); ?></strong> <?php echo $sauces_tried; ?>
+			</div>
+		<?php endif; ?>
+
 		<?php if ( $review_text ) : ?>
 			<div class="wing-review-text"><?php echo $review_text; ?></div>
 		<?php endif; ?>
@@ -147,6 +171,9 @@ function convert_to_block( $comment_id, $status ) {
 	$rating            = get_comment_meta( $comment_id, 'wing_rating', true );
 	$sauce_rating      = get_comment_meta( $comment_id, 'wing_sauce_rating', true );
 	$crispiness_rating = get_comment_meta( $comment_id, 'wing_crispiness_rating', true );
+	$sauces_tried      = get_comment_meta( $comment_id, 'wing_sauces_tried', true );
+	$wing_count        = get_comment_meta( $comment_id, 'wing_count', true );
+	$total_price       = get_comment_meta( $comment_id, 'wing_total_price', true );
 
 	$block_content = serialize_block(
 		array(
@@ -159,6 +186,9 @@ function convert_to_block( $comment_id, $status ) {
 				'crispinessRating' => floatval( $crispiness_rating ),
 				'reviewText'       => $comment->comment_content,
 				'timestamp'        => $comment->comment_date,
+				'saucesTried'      => sanitize_text_field( $sauces_tried ),
+				'wingCount'        => intval( $wing_count ),
+				'totalPrice'       => floatval( $total_price ),
 			),
 		)
 	);
@@ -179,7 +209,7 @@ function convert_to_block( $comment_id, $status ) {
 }
 
 /**
- * Recalculate average rating and review count from wing-review blocks
+ * Recalculate average rating, review count, and PPW stats from wing-review blocks
  */
 function recalculate_location_stats( $post_id ) {
 	$meta_helper = get_meta_helper();
@@ -196,15 +226,29 @@ function recalculate_location_stats( $post_id ) {
 
 	$review_count = count( $wing_reviews );
 	$total_rating = 0;
+	$ppw_values   = array();
 
 	foreach ( $wing_reviews as $review ) {
 		$total_rating += floatval( $review['attrs']['rating'] ?? 0 );
+
+		$wing_count  = intval( $review['attrs']['wingCount'] ?? 0 );
+		$total_price = floatval( $review['attrs']['totalPrice'] ?? 0 );
+
+		if ( $wing_count > 0 && $total_price > 0 ) {
+			$ppw_values[] = $total_price / $wing_count;
+		}
 	}
 
 	$average_rating = $review_count > 0 ? round( $total_rating / $review_count, 2 ) : 0;
+	$min_ppw        = ! empty( $ppw_values ) ? round( min( $ppw_values ), 2 ) : 0;
+	$max_ppw        = ! empty( $ppw_values ) ? round( max( $ppw_values ), 2 ) : 0;
+	$average_ppw    = ! empty( $ppw_values ) ? round( array_sum( $ppw_values ) / count( $ppw_values ), 2 ) : 0;
 
 	$meta_helper::update_location_meta( $post_id, array(
 		'wing_average_rating' => $average_rating,
 		'wing_review_count'   => $review_count,
+		'wing_average_ppw'    => $average_ppw,
+		'wing_min_ppw'        => $min_ppw,
+		'wing_max_ppw'        => $max_ppw,
 	) );
 }

@@ -20,7 +20,8 @@ This plugin provides a modal form for users to submit new wing locations or revi
   - Modal dialog with form fields
   - Context-aware: shows different fields for new locations vs reviews
   - Star rating inputs for overall, sauce, and crispiness ratings
-  - Location details fields (address, phone, website, hours, services)
+  - Location details fields (address, website, Instagram)
+  - Wing count and total price for price per wing calculation
 
 - **Geocoding Integration**
   - Server-side Nominatim API integration via theme
@@ -236,9 +237,9 @@ if ($meta_helper) {
 
 For new locations, stores all location data:
 - `wing_address`, `wing_latitude`, `wing_longitude`
-- `wing_phone`, `wing_website`, `wing_hours`
-- `wing_price_range`, `wing_takeout`, `wing_delivery`, `wing_dine_in`
+- `wing_website`, `wing_instagram`
 - `wing_average_rating`, `wing_review_count`
+- `wing_average_ppw`, `wing_min_ppw`, `wing_max_ppw`
 
 ## Requirements
 
@@ -275,5 +276,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.1
+**Version**: 0.1.2
 **Last Updated**: 2025

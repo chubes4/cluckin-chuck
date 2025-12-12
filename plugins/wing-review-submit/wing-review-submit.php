@@ -3,7 +3,7 @@
  * Plugin Name: Wing Review Submit
  * Plugin URI: https://chubes.net
  * Description: Frontend submission form block for new wing locations and reviews
- * Version: 0.1.1
+ * Version: 0.1.2
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.0' );
+define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.2' );
 define( 'WING_REVIEW_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
@@ -58,16 +58,11 @@ function get_location_info_for_post( $post_id ) {
 	$meta = $meta_helper::get_location_meta( $post_id );
 
 	return array(
-		'address'    => $meta['wing_address'] ?? '',
-		'latitude'   => $meta['wing_latitude'] ?? 0,
-		'longitude'  => $meta['wing_longitude'] ?? 0,
-		'phone'      => $meta['wing_phone'] ?? '',
-		'website'    => $meta['wing_website'] ?? '',
-		'hours'      => $meta['wing_hours'] ?? '',
-		'priceRange' => $meta['wing_price_range'] ?? '',
-		'takeout'    => $meta['wing_takeout'] ?? false,
-		'delivery'   => $meta['wing_delivery'] ?? false,
-		'dineIn'     => $meta['wing_dine_in'] ?? false,
+		'address'   => $meta['wing_address'] ?? '',
+		'latitude'  => $meta['wing_latitude'] ?? 0,
+		'longitude' => $meta['wing_longitude'] ?? 0,
+		'website'   => $meta['wing_website'] ?? '',
+		'instagram' => $meta['wing_instagram'] ?? '',
 	);
 }
 
@@ -172,6 +167,25 @@ function render_callback() {
 						<label for="wing_location_name">Location Name <span class="required">*</span></label>
 						<input type="text" id="wing_location_name" name="wing_location_name" required>
 					</div>
+
+					<div class="wing-form-field">
+						<label for="wing_address">Address <span class="required">*</span></label>
+						<input type="text" id="wing_address" name="wing_address" required>
+						<div id="geocode-indicator" class="geocode-indicator"></div>
+						<input type="hidden" id="wing_latitude" name="wing_latitude">
+						<input type="hidden" id="wing_longitude" name="wing_longitude">
+					</div>
+
+					<div class="wing-form-row">
+						<div class="wing-form-field">
+							<label for="wing_website">Website</label>
+							<input type="url" id="wing_website" name="wing_website">
+						</div>
+						<div class="wing-form-field">
+							<label for="wing_instagram">Instagram</label>
+							<input type="url" id="wing_instagram" name="wing_instagram" placeholder="https://instagram.com/...">
+						</div>
+					</div>
 					<?php endif; ?>
 
 					<div class="wing-form-row">
@@ -188,7 +202,7 @@ function render_callback() {
 					<div class="wing-form-field">
 						<label>Overall Rating <span class="required">*</span></label>
 						<div class="wing-rating-input">
-							<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+							<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 							<input type="radio" id="rating_<?php echo $i; ?>" name="wing_rating" value="<?php echo $i; ?>" required>
 							<label for="rating_<?php echo $i; ?>">&#9733;</label>
 							<?php endfor; ?>
@@ -199,7 +213,7 @@ function render_callback() {
 						<div class="wing-form-field">
 							<label>Sauce Rating</label>
 							<div class="wing-rating-input">
-								<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+								<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 								<input type="radio" id="sauce_rating_<?php echo $i; ?>" name="wing_sauce_rating" value="<?php echo $i; ?>">
 								<label for="sauce_rating_<?php echo $i; ?>">&#9733;</label>
 								<?php endfor; ?>
@@ -208,11 +222,22 @@ function render_callback() {
 						<div class="wing-form-field">
 							<label>Crispiness Rating</label>
 							<div class="wing-rating-input">
-								<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+								<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 								<input type="radio" id="crisp_rating_<?php echo $i; ?>" name="wing_crispiness_rating" value="<?php echo $i; ?>">
 								<label for="crisp_rating_<?php echo $i; ?>">&#9733;</label>
 								<?php endfor; ?>
 							</div>
+						</div>
+					</div>
+
+					<div class="wing-form-row">
+						<div class="wing-form-field">
+							<label for="wing_count"># of Wings</label>
+							<input type="number" id="wing_count" name="wing_count" min="1" step="1" placeholder="10">
+						</div>
+						<div class="wing-form-field">
+							<label for="wing_total_price">Total Price ($)</label>
+							<input type="number" id="wing_total_price" name="wing_total_price" min="0" step="0.01" placeholder="15.00">
 						</div>
 					</div>
 
@@ -221,51 +246,16 @@ function render_callback() {
 						<textarea id="wing_review_text" name="wing_review_text" required></textarea>
 					</div>
 
-					<?php if ( ! $is_singular_location ) : ?>
-					<div class="wing-form-field">
-						<label for="wing_address">Address <span class="required">*</span></label>
-						<input type="text" id="wing_address" name="wing_address" required>
-						<div id="geocode-indicator" class="geocode-indicator"></div>
-						<input type="hidden" id="wing_latitude" name="wing_latitude">
-						<input type="hidden" id="wing_longitude" name="wing_longitude">
-					</div>
-
 					<div class="wing-form-row">
 						<div class="wing-form-field">
-							<label for="wing_phone">Phone</label>
-							<input type="text" id="wing_phone" name="wing_phone">
+							<label for="wing_reviewer_name">Your Name <span class="required">*</span></label>
+							<input type="text" id="wing_reviewer_name" name="wing_reviewer_name" required>
 						</div>
 						<div class="wing-form-field">
-							<label for="wing_website">Website</label>
-							<input type="url" id="wing_website" name="wing_website">
+							<label for="wing_reviewer_email">Your Email <span class="required">*</span></label>
+							<input type="email" id="wing_reviewer_email" name="wing_reviewer_email" required>
 						</div>
 					</div>
-
-					<div class="wing-form-field">
-						<label for="wing_hours">Hours</label>
-						<textarea id="wing_hours" name="wing_hours" rows="3"></textarea>
-					</div>
-
-					<div class="wing-form-field">
-						<label for="wing_price_range">Price Range</label>
-						<select id="wing_price_range" name="wing_price_range">
-							<option value="">Select...</option>
-							<option value="$">$ - Budget</option>
-							<option value="$$">$$ - Moderate</option>
-							<option value="$$$">$$$ - Upscale</option>
-							<option value="$$$$">$$$$ - Premium</option>
-						</select>
-					</div>
-
-					<div class="wing-form-field">
-						<label>Services Available</label>
-						<div class="wing-checkbox-group">
-							<label><input type="checkbox" name="wing_takeout" value="1"> Takeout</label>
-							<label><input type="checkbox" name="wing_delivery" value="1"> Delivery</label>
-							<label><input type="checkbox" name="wing_dine_in" value="1"> Dine-in</label>
-						</div>
-					</div>
-					<?php endif; ?>
 
 					<div class="wing-honeypot">
 						<input type="text" name="wing_website_url" tabindex="-1" autocomplete="off">
@@ -350,6 +340,10 @@ function rest_submit_handler( \WP_REST_Request $request ) {
  * Sanitize form data from submission.
  */
 function sanitize_form_data( $post_data ) {
+	$wing_count  = intval( $post_data['wing_count'] ?? 0 );
+	$total_price = floatval( $post_data['wing_total_price'] ?? 0 );
+	$ppw         = ( $wing_count > 0 && $total_price > 0 ) ? round( $total_price / $wing_count, 2 ) : 0;
+
 	return array(
 		'post_id'           => intval( $post_data['wing_post_id'] ?? 0 ),
 		'location_name'     => sanitize_text_field( $post_data['wing_location_name'] ?? '' ),
@@ -359,16 +353,14 @@ function sanitize_form_data( $post_data ) {
 		'sauce_rating'      => intval( $post_data['wing_sauce_rating'] ?? 0 ),
 		'crispiness_rating' => intval( $post_data['wing_crispiness_rating'] ?? 0 ),
 		'review_text'       => sanitize_textarea_field( $post_data['wing_review_text'] ?? '' ),
+		'wing_count'        => $wing_count,
+		'total_price'       => $total_price,
+		'ppw'               => $ppw,
 		'address'           => sanitize_text_field( $post_data['wing_address'] ?? '' ),
 		'latitude'          => floatval( $post_data['wing_latitude'] ?? 0 ),
 		'longitude'         => floatval( $post_data['wing_longitude'] ?? 0 ),
-		'phone'             => sanitize_text_field( $post_data['wing_phone'] ?? '' ),
 		'website'           => esc_url_raw( $post_data['wing_website'] ?? '' ),
-		'hours'             => sanitize_textarea_field( $post_data['wing_hours'] ?? '' ),
-		'price_range'       => sanitize_text_field( $post_data['wing_price_range'] ?? '' ),
-		'takeout'           => ! empty( $post_data['wing_takeout'] ),
-		'delivery'          => ! empty( $post_data['wing_delivery'] ),
-		'dine_in'           => ! empty( $post_data['wing_dine_in'] ),
+		'instagram'         => esc_url_raw( $post_data['wing_instagram'] ?? '' ),
 	);
 }
 
@@ -386,6 +378,13 @@ function validate_form_data( $data ) {
 		return false;
 	}
 	if ( empty( $data['review_text'] ) ) {
+		return false;
+	}
+
+	$has_wing_count  = ! empty( $data['wing_count'] ) && $data['wing_count'] > 0;
+	$has_total_price = ! empty( $data['total_price'] ) && $data['total_price'] > 0;
+
+	if ( $has_wing_count !== $has_total_price ) {
 		return false;
 	}
 
@@ -427,6 +426,12 @@ function create_pending_review_comment( $post_id, $data ) {
 	add_comment_meta( $comment_id, 'wing_sauce_rating', $data['sauce_rating'] );
 	add_comment_meta( $comment_id, 'wing_crispiness_rating', $data['crispiness_rating'] );
 
+	if ( $data['wing_count'] > 0 && $data['total_price'] > 0 ) {
+		add_comment_meta( $comment_id, 'wing_count', $data['wing_count'] );
+		add_comment_meta( $comment_id, 'wing_total_price', $data['total_price'] );
+		add_comment_meta( $comment_id, 'wing_ppw', $data['ppw'] );
+	}
+
 	send_admin_email( 'review', $data, get_the_title( $post_id ) );
 
 	return $comment_id;
@@ -446,6 +451,9 @@ function create_pending_location( $data ) {
 			'crispinessRating' => $data['crispiness_rating'],
 			'reviewText'       => $data['review_text'],
 			'timestamp'        => current_time( 'mysql' ),
+			'wingCount'        => $data['wing_count'],
+			'totalPrice'       => $data['total_price'],
+			'ppw'              => $data['ppw'],
 		) )
 	);
 
@@ -470,15 +478,13 @@ function create_pending_location( $data ) {
 			'wing_address'        => $data['address'],
 			'wing_latitude'       => $data['latitude'],
 			'wing_longitude'      => $data['longitude'],
-			'wing_phone'          => $data['phone'],
 			'wing_website'        => $data['website'],
-			'wing_hours'          => $data['hours'],
-			'wing_price_range'    => $data['price_range'],
-			'wing_takeout'        => $data['takeout'],
-			'wing_delivery'       => $data['delivery'],
-			'wing_dine_in'        => $data['dine_in'],
+			'wing_instagram'      => $data['instagram'],
 			'wing_average_rating' => floatval( $data['rating'] ),
 			'wing_review_count'   => 1,
+			'wing_average_ppw'    => $data['ppw'],
+			'wing_min_ppw'        => $data['ppw'],
+			'wing_max_ppw'        => $data['ppw'],
 		) );
 	}
 

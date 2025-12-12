@@ -4,13 +4,13 @@ Interactive Leaflet map block displaying all wing locations with ratings and rev
 
 ## Plugin Responsibility
 
-**Single Responsibility**: Register and render the `wing-map/map-display` block
+**Single Responsibility**: Register and render the `wing-map-display/wing-map-display` block
 
 This plugin provides an interactive map visualization for wing locations. It queries published wing locations and displays them on an interactive Leaflet map with markers, popups, and auto-fitting bounds.
 
 ## Block Details
 
-- **Block Name**: `wing-map/map-display`
+- **Block Name**: `wing-map-display/wing-map-display`
 - **Block Type**: Server-side rendered
 - **Category**: Widgets
 
@@ -212,5 +212,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.1
+**Version**: 0.1.2
 **Last Updated**: 2025

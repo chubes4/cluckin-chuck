@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Wing Location Details
  * Plugin URI: https://chubes.net
- * Description: Hero block displaying wing location details (address, phone, hours, services, ratings)
- * Version: 0.1.1
+ * Description: Hero block displaying wing location details (address, website, Instagram, ratings, PPW)
+ * Version: 0.1.2
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_LOCATION_DETAILS_VERSION', '0.1.0' );
+define( 'WING_LOCATION_DETAILS_VERSION', '0.1.2' );
 define( 'WING_LOCATION_DETAILS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_LOCATION_DETAILS_URL', plugin_dir_url( __FILE__ ) );
 
@@ -69,15 +69,12 @@ function render_callback( $attributes, $content ) {
 	$meta = $meta_helper::get_location_meta( $post_id );
 
 	$address        = esc_html( $meta['wing_address'] );
-	$phone          = esc_html( $meta['wing_phone'] );
 	$website        = esc_url( $meta['wing_website'] );
-	$hours          = esc_html( $meta['wing_hours'] );
-	$price_range    = esc_html( $meta['wing_price_range'] );
-	$takeout        = (bool) $meta['wing_takeout'];
-	$delivery       = (bool) $meta['wing_delivery'];
-	$dine_in        = (bool) $meta['wing_dine_in'];
+	$instagram      = esc_url( $meta['wing_instagram'] );
 	$average_rating = floatval( $meta['wing_average_rating'] );
 	$review_count   = intval( $meta['wing_review_count'] );
+	$min_ppw        = floatval( $meta['wing_min_ppw'] );
+	$max_ppw        = floatval( $meta['wing_max_ppw'] );
 
 	$full_stars  = str_repeat( '★', (int) round( $average_rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $average_rating ) );
@@ -103,9 +100,9 @@ function render_callback( $attributes, $content ) {
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $price_range ) : ?>
-				<span class="wing-price-range"><?php echo $price_range; ?></span>
-			<?php endif; ?>
+			<div class="wing-ppw">
+				<?php echo esc_html( get_ppw_display( $min_ppw, $max_ppw ) ); ?>
+			</div>
 		</div>
 
 		<div class="wing-location-details-body">
@@ -116,13 +113,6 @@ function render_callback( $attributes, $content ) {
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $phone ) : ?>
-				<div class="wing-detail-row wing-phone">
-					<span class="wing-detail-icon" aria-hidden="true">📞</span>
-					<a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo $phone; ?></a>
-				</div>
-			<?php endif; ?>
-
 			<?php if ( $website ) : ?>
 				<div class="wing-detail-row wing-website">
 					<span class="wing-detail-icon" aria-hidden="true">🌐</span>
@@ -130,35 +120,47 @@ function render_callback( $attributes, $content ) {
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $hours ) : ?>
-				<div class="wing-detail-row wing-hours">
-					<span class="wing-detail-icon" aria-hidden="true">🕐</span>
-					<span class="wing-detail-value"><?php echo nl2br( $hours ); ?></span>
-				</div>
-			<?php endif; ?>
-
-			<?php if ( $takeout || $delivery || $dine_in ) : ?>
-				<div class="wing-detail-row wing-services">
-					<span class="wing-detail-icon" aria-hidden="true">🍴</span>
-					<span class="wing-detail-value">
-						<?php
-						$services = array();
-						if ( $takeout ) {
-							$services[] = __( 'Takeout', 'wing-location-details' );
-						}
-						if ( $delivery ) {
-							$services[] = __( 'Delivery', 'wing-location-details' );
-						}
-						if ( $dine_in ) {
-							$services[] = __( 'Dine-in', 'wing-location-details' );
-						}
-						echo esc_html( implode( ' · ', $services ) );
-						?>
-					</span>
+			<?php if ( $instagram ) : ?>
+				<div class="wing-detail-row wing-instagram">
+					<span class="wing-detail-icon" aria-hidden="true">📸</span>
+					<a href="<?php echo $instagram; ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( get_instagram_handle( $instagram ) ); ?></a>
 				</div>
 			<?php endif; ?>
 		</div>
 	</div>
 	<?php
 	return ob_get_clean();
+}
+
+/**
+ * Get PPW display string (range or single value or "No pricing data yet")
+ */
+function get_ppw_display( $min_ppw, $max_ppw ) {
+	if ( $min_ppw <= 0 && $max_ppw <= 0 ) {
+		return __( 'No pricing data yet', 'wing-location-details' );
+	}
+
+	if ( $min_ppw === $max_ppw || $min_ppw <= 0 ) {
+		return '$' . number_format( $max_ppw, 2 ) . '/wing';
+	}
+
+	if ( $max_ppw <= 0 ) {
+		return '$' . number_format( $min_ppw, 2 ) . '/wing';
+	}
+
+	return '$' . number_format( $min_ppw, 2 ) . ' - $' . number_format( $max_ppw, 2 ) . '/wing';
+}
+
+/**
+ * Extract Instagram handle from URL
+ */
+function get_instagram_handle( $url ) {
+	$path = parse_url( $url, PHP_URL_PATH );
+	$handle = trim( $path, '/' );
+
+	if ( empty( $handle ) ) {
+		return 'Instagram';
+	}
+
+	return '@' . $handle;
 }

@@ -100,18 +100,13 @@ class Wing_Location_Meta {
 			'wing_address'        => self::field( 'string', '', array( __CLASS__, 'sanitize_text' ) ),
 			'wing_latitude'       => self::field( 'number', 0, array( __CLASS__, 'sanitize_latitude' ) ),
 			'wing_longitude'      => self::field( 'number', 0, array( __CLASS__, 'sanitize_longitude' ) ),
-			'wing_phone'          => self::field( 'string', '', array( __CLASS__, 'sanitize_text' ) ),
 			'wing_website'        => self::field( 'string', '', array( __CLASS__, 'sanitize_url' ) ),
-			'wing_contact_email'  => self::field( 'string', '', array( __CLASS__, 'sanitize_email_field' ) ),
-			'wing_hours'          => self::field( 'string', '', array( __CLASS__, 'sanitize_textarea' ) ),
-			'wing_price_range'    => self::field( 'string', '', array( __CLASS__, 'sanitize_price_range' ) ),
-			'wing_takeout'        => self::field( 'boolean', false, array( __CLASS__, 'sanitize_boolean' ) ),
-			'wing_delivery'       => self::field( 'boolean', false, array( __CLASS__, 'sanitize_boolean' ) ),
-			'wing_dine_in'        => self::field( 'boolean', false, array( __CLASS__, 'sanitize_boolean' ) ),
 			'wing_instagram'      => self::field( 'string', '', array( __CLASS__, 'sanitize_url' ) ),
-			'wing_facebook'       => self::field( 'string', '', array( __CLASS__, 'sanitize_url' ) ),
 			'wing_average_rating' => self::field( 'number', 0, array( __CLASS__, 'sanitize_rating' ) ),
 			'wing_review_count'   => self::field( 'integer', 0, array( __CLASS__, 'sanitize_review_count' ) ),
+			'wing_average_ppw'    => self::field( 'number', 0, array( __CLASS__, 'sanitize_ppw' ) ),
+			'wing_min_ppw'        => self::field( 'number', 0, array( __CLASS__, 'sanitize_ppw' ) ),
+			'wing_max_ppw'        => self::field( 'number', 0, array( __CLASS__, 'sanitize_ppw' ) ),
 		);
 	}
 
@@ -128,16 +123,8 @@ class Wing_Location_Meta {
 		return sanitize_text_field( (string) $value );
 	}
 
-	private static function sanitize_textarea( $value ) {
-		return sanitize_textarea_field( (string) $value );
-	}
-
 	private static function sanitize_url( $value ) {
 		return esc_url_raw( (string) $value );
-	}
-
-	private static function sanitize_email_field( $value ) {
-		return sanitize_email( (string) $value );
 	}
 
 	private static function sanitize_latitude( $value ) {
@@ -162,16 +149,6 @@ class Wing_Location_Meta {
 		return $lng;
 	}
 
-	private static function sanitize_boolean( $value ) {
-		return (bool) $value;
-	}
-
-	private static function sanitize_price_range( $value ) {
-		$clean = strtoupper( trim( (string) $value ) );
-		$allowed = array( '', '$', '$$', '$$$', '$$$$' );
-		return in_array( $clean, $allowed, true ) ? $clean : '';
-	}
-
 	private static function sanitize_rating( $value ) {
 		$rating = floatval( $value );
 		if ( $rating < 0 ) {
@@ -186,5 +163,10 @@ class Wing_Location_Meta {
 	private static function sanitize_review_count( $value ) {
 		$count = intval( $value );
 		return max( 0, $count );
+	}
+
+	private static function sanitize_ppw( $value ) {
+		$ppw = floatval( $value );
+		return max( 0, round( $ppw, 2 ) );
 	}
 }

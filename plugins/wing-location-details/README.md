@@ -18,15 +18,9 @@ This plugin provides a hero block for displaying location information at the top
 
 - **Location Information Display**
   - Address with map pin icon
-  - Phone number with click-to-call link
   - Website with external link
-  - Operating hours with multi-line support
-  - Price range indicator
-
-- **Service Availability**
-  - Takeout indicator
-  - Delivery indicator
-  - Dine-in indicator
+  - Instagram with external link
+  - Price per wing display (min/max/average)
 
 - **Rating Display**
   - Star visualization (filled/empty stars)
@@ -67,15 +61,12 @@ When new locations are submitted via wing-review-submit, this block is automatic
 
 The block reads and displays these meta fields:
 - `wing_address` - Street address
-- `wing_phone` - Phone number (with tel: link)
 - `wing_website` - Website URL (with external link)
-- `wing_hours` - Operating hours (supports newlines)
-- `wing_price_range` - Price indicator ($, $$, $$$, $$$$)
-- `wing_takeout` - Takeout available (boolean)
-- `wing_delivery` - Delivery available (boolean)
-- `wing_dine_in` - Dine-in available (boolean)
+- `wing_instagram` - Instagram URL (with external link)
 - `wing_average_rating` - Average rating (1-5)
 - `wing_review_count` - Number of reviews
+- `wing_min_ppw` - Minimum price per wing
+- `wing_max_ppw` - Maximum price per wing
 
 ## Development
 
@@ -228,5 +219,5 @@ GPL v2 or later
 
 ---
 
-**Version**: 0.1.1
+**Version**: 0.1.2
 **Last Updated**: 2025

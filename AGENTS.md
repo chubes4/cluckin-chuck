@@ -36,7 +36,7 @@ Separate plugins enable **isolated development** - each plugin can be worked on 
 
 2. **wing-map-display** - Renders interactive Leaflet map from wing locations
    - Single responsibility: Display map block
-   - Block name: `wing-map/map-display`
+   - Block name: `wing-map-display/wing-map-display`
    - Reads data from theme meta
    - Namespace: `WingMapDisplay\`
 
@@ -193,15 +193,13 @@ Theme owns all location data via `Wing_Location_Meta`:
 'wing_address'          // Street address
 'wing_latitude'         // Decimal latitude
 'wing_longitude'        // Decimal longitude
-'wing_phone'            // Phone number
 'wing_website'          // Website URL
-'wing_hours'            // Operating hours
-'wing_price_range'      // Price range ($, $$, etc.)
-'wing_takeout'          // Boolean
-'wing_delivery'         // Boolean
-'wing_dine_in'          // Boolean
+'wing_instagram'        // Instagram URL
 'wing_average_rating'   // Float (1-5)
 'wing_review_count'     // Integer
+'wing_average_ppw'      // Average price per wing
+'wing_min_ppw'          // Minimum price per wing
+'wing_max_ppw'          // Maximum price per wing
 ```
 
 ### Plugin Data Access
@@ -266,7 +264,7 @@ function render_callback( $attributes, $content ) {
 
 4. **Wing Location Details** displays location info
    - Reads location data from theme meta
-   - Renders hero block with address, phone, hours, services, ratings
+   - Renders hero block with address, website, Instagram, ratings, price per wing
 
 ## APIs & External Services
 
@@ -275,12 +273,13 @@ function render_callback( $attributes, $content ) {
 - No admin-ajax.php endpoints
 - Plugins register REST routes via `register_rest_route()`
 
-### Nominatim Geocoding (wing-review-submit)
+### Nominatim Geocoding (theme-owned)
 - **Service**: OpenStreetMap Nominatim API
 - **Endpoint**: `https://nominatim.openstreetmap.org/search`
 - **Rate limit**: 1 request/second (enforced server-side)
-- **User-Agent**: `WingReviewSubmit/0.1.0 (https://chubes.net)`
+- **User-Agent**: `CluckinChuck/0.1.0 (https://chubes.net)`
 - **Server-side only** - never client-side requests
+- **Caching**: Results cached for 24 hours using transients
 
 ## Documentation
 

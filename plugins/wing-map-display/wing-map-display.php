@@ -3,7 +3,7 @@
  * Plugin Name: Wing Map Display
  * Plugin URI: https://chubes.net
  * Description: Interactive Leaflet map block displaying all wing locations with reviews
- * Version: 0.1.1
+ * Version: 0.1.2
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_MAP_DISPLAY_VERSION', '0.1.0' );
+define( 'WING_MAP_DISPLAY_VERSION', '0.1.2' );
 define( 'WING_MAP_DISPLAY_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_MAP_DISPLAY_URL', plugin_dir_url( __FILE__ ) );
 
@@ -45,27 +45,11 @@ function register_block() {
 add_action( 'init', __NAMESPACE__ . '\\register_block' );
 
 /**
- * Enqueue Leaflet assets and pass wing location data to JavaScript
+ * Render callback for the map block - enqueues assets and outputs container
  */
 function render_callback( $attributes, $content ) {
-	enqueue_assets();
-
 	$locations = get_wing_locations();
 
-	$script_handle = 'wing-map-display-wing-map-display-view-script';
-
-	wp_add_inline_script(
-		$script_handle,
-		'window.wingMapData = ' . wp_json_encode( array(
-			'locations' => $locations,
-		) ),
-		'before'
-	);
-
-	return '<div id="wing-map" class="wing-location-map"></div>';
-}
-
-function enqueue_assets() {
 	wp_enqueue_style(
 		'leaflet',
 		'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -81,7 +65,27 @@ function enqueue_assets() {
 		true
 	);
 
-	wp_script_add_data( 'wing-map-display-wing-map-display-view-script', 'dependencies', array( 'leaflet' ) );
+	$asset_file = WING_MAP_DISPLAY_PATH . 'build/map-display/frontend.asset.php';
+	$asset      = file_exists( $asset_file ) ? require $asset_file : array(
+		'dependencies' => array(),
+		'version'      => WING_MAP_DISPLAY_VERSION,
+	);
+
+	wp_enqueue_script(
+		'wing-map-display-frontend',
+		WING_MAP_DISPLAY_URL . 'build/map-display/frontend.js',
+		array_merge( array( 'leaflet' ), $asset['dependencies'] ),
+		$asset['version'],
+		true
+	);
+
+	wp_add_inline_script(
+		'wing-map-display-frontend',
+		'window.wingMapData = ' . wp_json_encode( array( 'locations' => $locations ) ) . ';',
+		'before'
+	);
+
+	return '<div id="wing-map" class="wing-location-map"></div>';
 }
 
 function get_wing_locations() {
@@ -102,9 +106,9 @@ function get_wing_locations() {
 			continue;
 		}
 
-		$meta         = $meta_helper::get_location_meta( $post->ID );
-		$lat          = floatval( $meta['wing_latitude'] );
-		$lng          = floatval( $meta['wing_longitude'] );
+		$meta = $meta_helper::get_location_meta( $post->ID );
+		$lat  = floatval( $meta['wing_latitude'] );
+		$lng  = floatval( $meta['wing_longitude'] );
 
 		if ( empty( $lat ) || empty( $lng ) ) {
 			continue;

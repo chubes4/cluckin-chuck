@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-12-12
+
+### Added
+- Geocoding admin notices for success/error feedback in WordPress admin
+- Automated build and deployment scripts (build.sh, deploy.sh)
+- New wing-review block attributes: saucesTried, wingCount, totalPrice
+- Front-page template for theme
+- Webpack configuration for wing-map-display plugin
+
+### Changed
+- Refactored location meta panel JavaScript for improved maintainability
+- Updated block.json style file references for consistent naming
+- Simplified location info array in wing-review-submit plugin
+- Updated plugin version constants across all components
+- Enhanced documentation and architectural references
+
+### Fixed
+- Inconsistent version numbers across plugin constants
+- Missing Instagram field handling in submission forms
+
 ## [0.1.1] - 2025-12-07
 
 ### Added

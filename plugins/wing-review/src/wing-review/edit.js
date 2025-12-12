@@ -25,7 +25,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		crispinessRating = 0,
 		reviewText = '',
 		timestamp = '',
+		saucesTried = '',
+		wingCount = 0,
+		price = 0,
 	} = attributes;
+
+	const pricePerWing = wingCount > 0 ? (price / wingCount).toFixed(2) : '0.00';
 
 	const { authorName, authorEmail } = useSelect((select) => {
 		const { getEditedPostAttribute } = select('core/editor');
@@ -129,6 +134,55 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						<span className="wing-star-preview">{renderStars(crispinessRating)}</span>
 					</div>
 				</div>
+			</div>
+
+			<div className="wing-pricing-section">
+				<h5>{__('Pricing', 'wing-review')}</h5>
+
+				<div className="wing-form-row">
+					<div className="wing-form-field">
+						<label htmlFor={`wing-count-${clientId}`}>
+							{__('Number of Wings', 'wing-review')} <span className="required">*</span>
+						</label>
+						<TextControl
+							id={`wing-count-${clientId}`}
+							type="number"
+							min="1"
+							step="1"
+							value={wingCount}
+							onChange={(val) => setAttributes({ wingCount: parseInt(val, 10) || 0 })}
+						/>
+					</div>
+					<div className="wing-form-field">
+						<label htmlFor={`wing-price-${clientId}`}>
+							{__('Price Paid ($)', 'wing-review')} <span className="required">*</span>
+						</label>
+						<TextControl
+							id={`wing-price-${clientId}`}
+							type="number"
+							min="0"
+							step="0.01"
+							value={price}
+							onChange={(val) => setAttributes({ price: parseFloat(val) || 0 })}
+						/>
+					</div>
+				</div>
+
+				<div className="wing-ppw-display">
+					<strong>{__('Price Per Wing:', 'wing-review')}</strong> ${pricePerWing}
+				</div>
+			</div>
+
+			<div className="wing-sauces-section">
+				<label htmlFor={`wing-sauces-${clientId}`}>
+					{__('Sauces Tried', 'wing-review')}
+				</label>
+				<TextControl
+					id={`wing-sauces-${clientId}`}
+					value={saucesTried}
+					onChange={(val) => setAttributes({ saucesTried: val })}
+					placeholder={__('e.g., Buffalo, Garlic Parm, Mango Habanero', 'wing-review')}
+				/>
 			</div>
 
 			<div className="wing-review-text-section">

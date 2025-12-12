@@ -150,16 +150,13 @@ class Wing_Location_Meta {
 - `wing_address` - Street address
 - `wing_latitude` - Decimal latitude
 - `wing_longitude` - Decimal longitude
-- `wing_phone` - Phone number
 - `wing_website` - Website URL
-- `wing_email` - Email address
-- `wing_hours` - Operating hours
-- `wing_price_range` - Price range ($, $$, $$$, $$$$)
-- `wing_takeout` - Boolean (takeout available)
-- `wing_delivery` - Boolean (delivery available)
-- `wing_dine_in` - Boolean (dine-in available)
+- `wing_instagram` - Instagram URL
 - `wing_average_rating` - Average rating (1-5 float)
 - `wing_review_count` - Count of reviews
+- `wing_average_ppw` - Average price per wing
+- `wing_min_ppw` - Minimum price per wing
+- `wing_max_ppw` - Maximum price per wing
 
 ## Plugin Integration
 
@@ -183,8 +180,8 @@ The theme works seamlessly with four separate plugins:
 ### wing-review-submit
 - Provides a form block for user submissions
 - Creates wing_location posts and reviews
-- Geocodes addresses via Nominatim API
-- Saves data to theme metadata
+- Geocodes addresses via Nominatim API (frontend users never see coordinates)
+- Saves data to theme metadata (coordinates stored automatically on save)
 
 ## Development
 
@@ -228,7 +225,7 @@ Built with love for chicken wing enthusiasts across the USA 🍗
 
 ---
 
-**Version:** 0.1.1  
+**Version:** 0.1.2  
 **Last Updated:** 2025
 
 ---

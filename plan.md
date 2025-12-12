@@ -147,22 +147,19 @@ class Wing_Location_Meta {
     'wing_address'          // Street address
     'wing_latitude'         // Decimal latitude (-90 to 90)
     'wing_longitude'        // Decimal longitude (-180 to 180)
-    
+
+    // Contact Information
+    'wing_website'          // Website URL
+    'wing_instagram'        // Instagram URL
+
     // Ratings
     'wing_average_rating'   // Overall rating (1-5, stored as float)
     'wing_review_count'     // Integer count
-    
-    // Contact Information
-    'wing_phone'            // Phone number
-    'wing_website'          // Website URL
-    'wing_email'            // Email address
-    
-    // Business Details
-    'wing_hours'            // Operating hours (textarea)
-    'wing_price_range'      // Price range: $, $$, $$$, $$$$
-    'wing_takeout'          // Boolean
-    'wing_delivery'         // Boolean
-    'wing_dine_in'          // Boolean
+
+    // Pricing
+    'wing_average_ppw'      // Average price per wing
+    'wing_min_ppw'          // Minimum price per wing
+    'wing_max_ppw'          // Maximum price per wing
 }
 ```
 
@@ -411,15 +408,13 @@ function map_meta_input($data) {
         'wing_address' => $data['address'],
         'wing_latitude' => $data['latitude'],
         'wing_longitude' => $data['longitude'],
-        'wing_phone' => $data['phone'],
         'wing_website' => $data['website'],
-        'wing_hours' => $data['hours'],
-        'wing_price_range' => $data['price_range'],
-        'wing_takeout' => $data['takeout'],
-        'wing_delivery' => $data['delivery'],
-        'wing_dine_in' => $data['dine_in'],
+        'wing_instagram' => $data['instagram'],
         'wing_average_rating' => floatval($data['rating']),
         'wing_review_count' => 1,
+        'wing_average_ppw' => $data['ppw'],
+        'wing_min_ppw' => $data['ppw'],
+        'wing_max_ppw' => $data['ppw'],
     ];
 }
 ```

@@ -36,7 +36,7 @@ add_action( 'plugins_loaded', function () {
 
 // Configure the frontend chat widget.
 add_filter( 'data_machine_frontend_chat_config', function ( $config ) {
-	$config['agent_slug']  = 'chuck';
+	$config['agent_slug']  = 'cluckinchuck';
 	$config['visibility']  = 'public';
 	$config['description'] = 'Your AI wing advisor. Ask about locations, submit reviews, or find the best wings near you.';
 	$config['enabled']     = true;

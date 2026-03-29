@@ -72,7 +72,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		geocodeIndicator.textContent = 'Geocoding...';
 		geocodeIndicator.className = 'geocode-indicator geocode-loading';
 
-		fetch( `${ wingReviewSubmitData.restUrl }/geocode`, {
+		fetch( `${ wingReviewSubmitData.restUrl }${ wingReviewSubmitData.geocodePath || '/locations/geocode' }`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -117,7 +117,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		submitBtn.disabled = true;
 		submitBtn.textContent = 'Submitting...';
 
-		fetch( `${ wingReviewSubmitData.restUrl }/submit`, {
+		const submitPath = isExistingPost
+			? ( wingReviewSubmitData.submitReviewPath || '/reviews/submit' )
+			: ( wingReviewSubmitData.submitLocationPath || '/locations/submit' );
+
+		fetch( `${ wingReviewSubmitData.restUrl }${ submitPath }`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -95,6 +95,9 @@ add_action( 'init', __NAMESPACE__ . '\\register_block' );
 
 /**
  * Register REST API routes.
+ *
+ * @deprecated 0.2.0 Routes migrated to cluckin-chuck-api plugin under cluckin-chuck/v1 namespace.
+ *             Legacy endpoints kept as redirecting stubs for backward compatibility.
  */
 function register_rest_routes() {
 	register_rest_route(
@@ -132,8 +135,11 @@ function render_callback() {
 	wp_add_inline_script(
 		$script_handle,
 		'window.wingReviewSubmitData = ' . wp_json_encode( array(
-			'restUrl' => rest_url( 'wing-review-submit/v1' ),
-			'nonce'   => wp_create_nonce( 'wp_rest' ),
+			'restUrl'            => rest_url( 'cluckin-chuck/v1' ),
+			'nonce'              => wp_create_nonce( 'wp_rest' ),
+			'submitReviewPath'   => '/reviews/submit',
+			'submitLocationPath' => '/locations/submit',
+			'geocodePath'        => '/locations/geocode',
 		) ),
 		'before'
 	);

@@ -67,49 +67,12 @@ function cluckin_chuck_enqueue_editor_assets() {
 }
 add_action( 'enqueue_block_editor_assets', 'cluckin_chuck_enqueue_editor_assets' );
 
-function cluckin_chuck_register_rest_routes() {
-	register_rest_route(
-		'cluckin-chuck/v1',
-		'/geocode',
-		array(
-			'methods'             => 'POST',
-			'callback'            => 'cluckin_chuck_rest_geocode_handler',
-			'permission_callback' => function() {
-				return current_user_can( 'edit_posts' );
-			},
-		)
-	);
-}
-add_action( 'rest_api_init', 'cluckin_chuck_register_rest_routes' );
-
-function cluckin_chuck_rest_geocode_handler( WP_REST_Request $request ) {
-	$address = sanitize_text_field( $request->get_param( 'address' ) ?? '' );
-
-	// Delegate to ability when available, fall back to direct call.
-	if ( function_exists( 'wp_get_ability' ) && wp_has_ability( 'cluckin-chuck/geocode-address' ) ) {
-		$ability = wp_get_ability( 'cluckin-chuck/geocode-address' );
-		$result  = $ability->execute( array( 'address' => $address ) );
-
-		if ( is_wp_error( $result ) ) {
-			return new WP_REST_Response( array( 'message' => $result->get_error_message() ), 400 );
-		}
-
-		return new WP_REST_Response( $result, 200 );
-	}
-
-	// Fallback for environments without Abilities API.
-	if ( empty( $address ) ) {
-		return new WP_REST_Response( array( 'message' => 'Address is required' ), 400 );
-	}
-
-	$result = CluckinChuck\geocode_address( $address );
-
-	if ( $result ) {
-		return new WP_REST_Response( $result, 200 );
-	}
-
-	return new WP_REST_Response( array( 'message' => 'Could not geocode address' ), 400 );
-}
+/**
+ * Legacy geocode REST route removed in 0.2.0.
+ *
+ * Geocode endpoint migrated to cluckin-chuck-api plugin:
+ *   POST /cluckin-chuck/v1/locations/geocode
+ */
 
 function cluckin_chuck_set_geocode_notice( $type, $message ) {
 	$notice = array(

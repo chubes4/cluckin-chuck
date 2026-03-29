@@ -1,0 +1,18 @@
+{
+  "id": "cluckin-chuck-agent-kit",
+  "remote_path": "wp-content/plugins/cluckin-chuck-agent-kit",
+  "changelog_target": "docs/CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "version_targets": [
+    {
+      "file": "cluckin-chuck-agent-kit.php",
+      "pattern": "(?m)^\\s*\\*?\\s*Version:\\s*([0-9.]+)"
+    },
+    {
+      "file": "cluckin-chuck-agent-kit.php",
+      "pattern": "CLUCKIN_CHUCK_AGENT_KIT_VERSION',\\s*'([0-9.]+)'"
+    }
+  ]
+}

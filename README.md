@@ -1,335 +1,157 @@
-# Cluckin Chuck: Wing Map Showcase
+# Cluckin' Chuck
 
-A WordPress project combining a block theme and four separate plugins to showcase chicken wing locations across the USA with interactive Leaflet maps.
+Chicken wing location reviews — find the best wings near you.
 
-## Project Overview
+**Live site:** https://cluckinchuck.saraichinwag.com
+**Author:** [Chris Huber](https://chubes.net) ([@chubes4](https://github.com/chubes4))
 
-Cluckin Chuck demonstrates clean WordPress architecture by separating concerns: the theme owns data and presentation, while four plugins provide isolated functionality. The project features an interactive map interface for discovering wing locations, user review submission with geocoding, and modern Full Site Editing capabilities.
+## What Is This
+
+A WordPress monorepo: one block theme + seven plugins that power a chicken wing review site with interactive maps, user submissions, an AI chat agent, a REST API, and WP-CLI tooling.
+
+Visitors discover wing spots on a Leaflet map, read reviews, and submit their own. Chuck — the AI agent — helps with location lookups and review submissions via a floating chat widget, and handles admin operations via Discord.
 
 ## Architecture
 
-This project follows the **Single Responsibility Principle** with clear separation of concerns:
+```
+┌───────────────────────────────────────────────────────┐
+│                  cluckin-chuck theme                   │
+│    Owns: wing_location CPT + Wing_Location_Meta       │
+│    Provides: FSE templates, color scheme, layout      │
+└──────────────────────┬────────────────────────────────┘
+                       │
+        All plugins read/write via Wing_Location_Meta
+                       │
+    ┌──────┬───────────┼───────────┬──────────┐
+    ▼      ▼           ▼           ▼          ▼
+ location  map       review     review      agent
+ details   display   display    submit      kit
+ (hero)    (Leaflet) (blocks)   (form)      (AI tools)
+                                              │
+                              ┌────────────────┤
+                              ▼                ▼
+                            API              CLI
+                         (REST)           (WP-CLI)
+```
 
-### Theme (`/themes/cluckin-chuck/`)
-**Responsibility**: Data ownership + presentation layer
+### Data Flow
 
-- Custom post type: `wing_location` (slug: `wings`)
-- Metadata management (address, coordinates, ratings, contact info)
-- Single source of truth for all location data
-- WordPress block theme with Full Site Editing (FSE)
-- Custom templates for wing locations
-- Wing sauce orange color scheme
-- Template parts (header, footer)
+1. **Visitor submits** a wing location via `wing-review-submit` form (or Chuck chat)
+2. Address is **geocoded** via Nominatim API — coordinates stored automatically
+3. A `wing_location` post is created with all metadata via `Wing_Location_Meta`
+4. **Location details** renders the hero block (address, hours, services, ratings)
+5. **Map display** plots all locations on an interactive Leaflet map
+6. **Reviews** stored as comments, converted to blocks on approval, stats recalculated
 
-### Four Plugins (for isolated development)
+## Components
 
-1. **wing-location-details** (`/plugins/wing-location-details/`)
-   - Single responsibility: Location details hero display
-   - Block: `wing-location-details/wing-location-details`
-   - Reads location data from theme metadata
+### Theme
 
-2. **wing-map-display** (`/plugins/wing-map-display/`)
-    - Single responsibility: Interactive map display
-    - Block: `wing-map-display/wing-map-display`
-    - Reads data from theme metadata
-    - Leaflet.js map integration with OpenStreetMap
+| Component | Path | Description |
+|-----------|------|-------------|
+| **cluckin-chuck** | `themes/cluckin-chuck/` | Block theme (FSE). Owns `wing_location` CPT, metadata API, geocoding, templates, wing sauce color palette |
 
-3. **wing-review** (`/plugins/wing-review/`)
-   - Single responsibility: Review display + comment-to-block conversion
-   - Block: `wing-review/wing-review`
-   - Hooks into comment approval workflow
-   - Converts approved comments to permanent review blocks
-   - Recalculates location aggregate stats
+### Wing Plugins
 
-4. **wing-review-submit** (`/plugins/wing-review-submit/`)
-   - Single responsibility: Submission form + geocoding
-   - Block: `wing-review-submit/wing-review-submit`
-   - User review & location submission form
-   - Nominatim geocoding service integration
-   - Rate limiting, honeypot, nonce security
+| Plugin | Path | Block | Description |
+|--------|------|-------|-------------|
+| **wing-location-details** | `plugins/wing-location-details/` | `wing-location-details/wing-location-details` | Hero display: address, website, Instagram, ratings, price per wing |
+| **wing-map-display** | `plugins/wing-map-display/` | `wing-map-display/wing-map-display` | Interactive Leaflet map with all wing locations |
+| **wing-review** | `plugins/wing-review/` | `wing-review/wing-review` | Review display + comment-to-block conversion on approval |
+| **wing-review-submit** | `plugins/wing-review-submit/` | `wing-review-submit/wing-review-submit` | Frontend submission form with Nominatim geocoding, rate limiting, honeypot |
+
+### Platform Plugins
+
+| Plugin | Path | Description |
+|--------|------|-------------|
+| **cluckin-chuck-agent-kit** | `plugins/cluckin-chuck-agent-kit/` | Chat tools bridging wing abilities to [Data Machine](https://github.com/Extra-Chill/data-machine)'s agent system. Configures the frontend chat widget |
+| **cluckin-chuck-api** | `plugins/cluckin-chuck-api/` | Unified REST API under `cluckinchuck/v1` — wraps abilities from wing plugins |
+| **cluckin-chuck-cli** | `plugins/cluckin-chuck-cli/` | WP-CLI commands under `wp cluckinchuck` — wraps abilities from wing plugins |
+
+## AI Agent (Chuck)
+
+Chuck is the site's AI assistant, powered by [Data Machine](https://github.com/Extra-Chill/data-machine):
+
+- **Frontend visitors** — floating chat widget helps find wing spots, submit reviews conversationally
+- **Admin (Discord)** — site management, content ops, deployment via [kimaki](https://kimaki.xyz)
+- **Same identity** in both contexts — what changes is tool access
+
+The agent kit plugin registers chat tools (location search, review submission, stats lookup) and configures the frontend chat widget with the `cluckinchuck` agent slug.
 
 ## Directory Structure
 
 ```
 cluckin-chuck/
-├── README.md (this file)
-├── plan.md (implementation reference)
-├── AGENTS.md (development standards)
+├── README.md                          # This file
+├── AGENTS.md                          # Development standards + architecture
+├── plan.md                            # Implementation reference
+├── docs/
+│   ├── CHANGELOG.md                   # Version history
+│   └── api-reference.md               # REST API documentation
 ├── themes/
 │   └── cluckin-chuck/
-│       ├── style.css
-│       ├── theme.json
-│       ├── functions.php
+│       ├── style.css                  # Theme headers + global styles
+│       ├── theme.json                 # FSE config, colors, typography
+│       ├── functions.php              # Theme setup
 │       ├── inc/
-│       │   ├── class-wing-location.php (CPT registration)
-│       │   ├── class-wing-location-meta.php (metadata management)
-│       │   └── geocoding.php (Nominatim geocoding)
-│       ├── templates/
-│       ├── parts/
-│       └── build.sh
+│       │   ├── class-wing-location.php        # CPT registration
+│       │   ├── class-wing-location-meta.php   # Metadata API
+│       │   └── geocoding.php                  # Nominatim integration
+│       ├── templates/                 # FSE templates
+│       └── parts/                     # Header, footer
 ├── plugins/
-│   ├── wing-location-details/
-│   │   ├── wing-location-details.php
-│   │   ├── src/wing-location-details/
-│   │   ├── build/wing-location-details/
-│   │   ├── package.json
-│   │   └── build.sh
-│   ├── wing-map-display/
-│   │   ├── wing-map-display.php
-│   │   ├── src/map-display/
-│   │   ├── build/map-display/
-│   │   ├── package.json
-│   │   └── build.sh
-│   ├── wing-review/
-│   │   ├── wing-review.php
-│   │   ├── src/wing-review/
-│   │   ├── build/wing-review/
-│   │   ├── package.json
-│   │   └── build.sh
-│   └── wing-review-submit/
-│       ├── wing-review-submit.php
-│       ├── src/wing-review-submit/
-│       ├── build/wing-review-submit/
-│       ├── package.json
-│       └── build.sh
+│   ├── wing-location-details/         # Location hero block
+│   ├── wing-map-display/              # Map block (Leaflet)
+│   ├── wing-review/                   # Review block + conversion
+│   ├── wing-review-submit/            # Submission form block
+│   ├── cluckin-chuck-agent-kit/       # AI agent chat tools
+│   ├── cluckin-chuck-api/             # REST API surface
+│   └── cluckin-chuck-cli/             # WP-CLI surface
+└── .github/
+    └── copilot-instructions.md
 ```
 
-## Requirements
+## Development
 
-- WordPress 6.0 or higher
-- PHP 8.0 or higher
-- Node.js and npm (for development)
+### Requirements
 
-## Quick Start
+- WordPress 6.9+
+- PHP 8.0+
+- Node.js and npm (for block development)
+- [Data Machine](https://github.com/Extra-Chill/data-machine) (for agent features)
 
-### Development Setup
+### Build & Deploy
 
-1. **Clone the repository** to your WordPress installation:
-   ```bash
-   cd /path/to/wordpress/wp-content/
-   git clone https://github.com/your-repo/cluckin-chuck.git cluckin-chuck
-   cd cluckin-chuck
-   ```
-
-2. **Install theme & plugin dependencies:**
-   ```bash
-   # Theme (no dependencies)
-   cd themes/cluckin-chuck
-
-   # Plugin 1: wing-location-details
-   cd ../../plugins/wing-location-details
-   npm install
-
-   # Plugin 2: wing-map-display
-   cd ../wing-map-display
-   npm install
-
-   # Plugin 3: wing-review
-   cd ../wing-review
-   npm install
-
-   # Plugin 4: wing-review-submit
-   cd ../wing-review-submit
-   npm install
-   ```
-
-3. **Activate components:**
-   - Go to WordPress Admin → Plugins
-   - Activate: Wing Location Details, Wing Map Display, Wing Review, Wing Review Submit
-   - Go to Appearance → Themes
-   - Activate: Cluckin Chuck
-
-### Development Build
-
-Each plugin supports watch mode for automatic rebuilds:
+All builds and deployments use [homeboy](https://github.com/Extra-Chill/homeboy):
 
 ```bash
-# Plugin development (watch mode)
-cd plugins/wing-map-display
+homeboy build cluckinchuck     # Test, lint, build all components
+homeboy deploy cluckinchuck    # Deploy to production
+```
+
+### Plugin Development
+
+```bash
+# Watch mode (rebuilds on file changes)
+cd plugins/<plugin-name>
+npm install
 npm run start
 
-# Or build once
+# Production build
 npm run build
 ```
 
-### Production Build
+### Theme Development
 
-```bash
-# Build theme
-cd themes/cluckin-chuck
-chmod +x build.sh
-./build.sh
-# Output: build/cluckin-chuck.zip
+No build step — FSE templates and `theme.json` work directly. The theme does have a `build/location-meta-panel/` for the admin meta box editor script.
 
-# Build plugin
-cd plugins/wing-map-display
-chmod +x build.sh
-./build.sh
-# Output: build/wing-map-display.zip
+## External Services
 
-# Repeat for wing-location-details, wing-review, and wing-review-submit
-```
-
-## Features
-
-### Wing Location Details Block (`wing-location-details/wing-location-details`)
-- Displays location hero with address, website, Instagram, ratings, and price per wing
-- Shows aggregate rating and review count
-- Reads data from theme metadata
-- Provided by: **wing-location-details plugin**
-
-### Interactive Wing Map Block (`wing-map-display/wing-map-display`)
-- Leaflet.js integration with OpenStreetMap tiles
-- Custom chicken wing marker icons
-- Auto-fitting map bounds to show all locations
-- Click markers for location details and ratings
-- Responsive design (600px desktop, 400px mobile)
-- Provided by: **wing-map-display plugin**
-
-### User Review System (`wing-review/wing-review`)
-- Review submission form block for new locations and reviews
-- Star ratings for overall quality, sauce, and crispiness
-- Comment moderation workflow (reviews require approval)
-- Automatic conversion of approved reviews to permanent blocks
-- Security: nonce verification, honeypot spam prevention, rate limiting (1 review/hour per IP)
-- Provided by: **wing-review-submit** (form) + **wing-review** (block conversion)
-
-### Wing Location Management
-- Custom post type with full WordPress editor support
-- Comprehensive metadata fields:
-  - Location & coordinates (geocoded via Nominatim)
-  - Ratings (overall, sauce quality, crispiness)
-  - Contact information (website, Instagram)
-  - Pricing data (price per wing calculations)
-- Owned by: **cluckin-chuck theme**
-
-### Full Site Editing Theme
-- Modern WordPress FSE capabilities
-- Custom templates for wing locations
-- Wing sauce orange color palette
-- System font stack for performance
-- Responsive spacing and typography scales
-
-## Usage
-
-### Adding Wing Locations
-
-**Option 1: Admin Creation**
-1. Go to WordPress Admin → Wing Locations → Add New
-2. Enter the location title (restaurant name)
-3. Add description and featured image
-4. The location details and review blocks are automatically included
-5. Publish the location
-
-**Option 2: User Submission**
-1. Add the Wing Review Submit block to any page
-2. Users can submit new locations via the frontend form
-3. Submissions create pending posts for admin approval
-4. Admin reviews and publishes approved locations
-
-### Displaying the Map
-
-Add the Wing Map block to any page/post:
-1. Edit page/post in block editor
-2. Click "+" to add block
-3. Search for "Wing Map"
-4. Insert block (will display all published wing locations)
-
-Or use in templates via Full Site Editing:
-- Single Wing Location template includes the map by default
-- Customize via Appearance → Editor
-
-## Technical Details
-
-### Map Library
-- **Leaflet v1.9.4** - Open source, no API keys required
-- OpenStreetMap tile provider
-- Custom marker icons (32x32px SVG)
-- Auto-fitting bounds with 50px padding
-
-### Geocoding Service
-- **Nominatim API** (OpenStreetMap)
-- Free, open-source geocoding
-- Server-side requests only
-- 1 request/second rate limit compliance
-- User-Agent header: `CluckinChuck/0.1.0 (https://chubes.net)`
-
-### Build Process
-- **Plugins**: npm (wp-scripts) for block compilation
-- **Theme**: No build required (FSE uses HTML templates directly)
-- Production builds create clean directories + ZIP files
-- Verification logic confirms successful builds
-
-## Documentation
-
-- **AGENTS.md** - Development standards and architecture reference
-- **plan.md** - Implementation reference and architectural decisions
-- **plugins/wing-location-details/README.md** - Location details block documentation
-- **plugins/wing-map-display/README.md** - Map block documentation
-- **plugins/wing-review/README.md** - Review block documentation
-- **plugins/wing-review-submit/README.md** - Submission form documentation
-- **themes/cluckin-chuck/README.md** - Theme documentation
-
-## Clean Architecture Principles
-
-### Single Responsibility
-- Theme = data ownership + presentation
-- Each plugin = one focused responsibility
-- Each PHP class = one responsibility
-
-### KISS (Keep It Simple, Stupid)
-- Direct, centralized solutions
-- Clear boundaries between components
-- Minimal abstractions
-
-### Single Source of Truth
-- Theme owns all wing location data
-- No duplicate data storage
-- Plugins consume what theme provides
-
-### Four-Plugin Split Benefits
-- **Isolated development** - Work on plugins independently
-- **Clear responsibilities** - Each plugin has one job
-- **Easy testing** - Test each plugin separately
-- **Scalable** - Add new plugins without touching existing ones
-
-## Architecture Principles
-
-### Data Flow
-1. **Theme** registers CPT and owns all location metadata
-2. **wing-review-submit** plugin collects user submissions and saves to theme meta
-3. **wing-review** plugin converts approved comments to review blocks
-4. **wing-location-details** plugin displays location hero from theme meta
-5. **wing-map-display** plugin queries locations and renders interactive map
-
-## Future Extensibility
-
-### Plugin Extensions
-- Custom taxonomies (wing styles, regions)
-- REST API endpoints for external integrations
-- Geolocation search functionality
-- Additional rating dimensions
-
-### Theme Extensions
-- Additional templates for different post types
-- More block patterns for various layouts
-- Custom block styles for plugins
-- Color scheme variations
-- Typography refinements
-
-## Author & Credits
-
-**Author**: Chris Huber
-- Website: [chubes.net](https://chubes.net)
-- GitHub: [@chubes4](https://github.com/chubes4)
-- Founder & Editor: [Extra Chill](https://extrachill.com)
-- GitHub Organization: [Extra-Chill](https://github.com/Extra-Chill)
-
-**Built with**:
-- WordPress 6.0+
-- Leaflet.js v1.9.4
-- OpenStreetMap
-- Nominatim Geocoding Service
+| Service | Used By | Purpose |
+|---------|---------|---------|
+| **Nominatim** (OpenStreetMap) | Theme geocoding | Address → coordinates. Server-side only, 1 req/sec, cached 24h |
+| **Leaflet.js** v1.9.4 | wing-map-display | Interactive maps. No API key required |
+| **Data Machine** | agent-kit | AI agent runtime — memory, pipelines, chat tools |
 
 ## License
 

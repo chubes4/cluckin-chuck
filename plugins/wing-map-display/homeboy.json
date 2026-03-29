@@ -1,0 +1,19 @@
+{
+  "auto_cleanup": false,
+  "changelog_target": "CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "id": "wing-map-display",
+  "remote_path": "wp-content/plugins/wing-map-display",
+  "version_targets": [
+    {
+      "file": "wing-map-display.php",
+      "pattern": "Version:\\s*([0-9.]+)"
+    },
+    {
+      "file": "wing-map-display.php",
+      "pattern": "WING_MAP_DISPLAY_VERSION',\\s*'([0-9.]+)'"
+    }
+  ]
+}

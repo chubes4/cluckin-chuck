@@ -1,0 +1,19 @@
+{
+  "auto_cleanup": false,
+  "changelog_target": "CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "id": "wing-review",
+  "remote_path": "wp-content/plugins/wing-review",
+  "version_targets": [
+    {
+      "file": "wing-review.php",
+      "pattern": "Version:\\s*([0-9.]+)"
+    },
+    {
+      "file": "wing-review.php",
+      "pattern": "WING_REVIEW_VERSION',\\s*'([0-9.]+)'"
+    }
+  ]
+}

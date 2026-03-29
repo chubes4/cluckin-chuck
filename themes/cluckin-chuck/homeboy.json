@@ -1,0 +1,15 @@
+{
+  "auto_cleanup": false,
+  "changelog_target": "CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "id": "cluckin-chuck",
+  "remote_path": "wp-content/themes/cluckin-chuck",
+  "version_targets": [
+    {
+      "file": "style.css",
+      "pattern": "Version:\\s*([0-9.]+)"
+    }
+  ]
+}

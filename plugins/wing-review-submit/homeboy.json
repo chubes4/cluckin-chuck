@@ -1,0 +1,19 @@
+{
+  "auto_cleanup": false,
+  "changelog_target": "CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "id": "wing-review-submit",
+  "remote_path": "wp-content/plugins/wing-review-submit",
+  "version_targets": [
+    {
+      "file": "wing-review-submit.php",
+      "pattern": "Version:\\s*([0-9.]+)"
+    },
+    {
+      "file": "wing-review-submit.php",
+      "pattern": "WING_REVIEW_SUBMIT_VERSION',\\s*'([0-9.]+)'"
+    }
+  ]
+}

@@ -67,13 +67,6 @@ function cluckin_chuck_enqueue_editor_assets() {
 }
 add_action( 'enqueue_block_editor_assets', 'cluckin_chuck_enqueue_editor_assets' );
 
-/**
- * Legacy geocode REST route removed in 0.2.0.
- *
- * Geocode endpoint migrated to cluckin-chuck-api plugin:
- *   POST /cluckin-chuck/v1/locations/geocode
- */
-
 function cluckin_chuck_set_geocode_notice( $type, $message ) {
 	$notice = array(
 		'type'    => sanitize_text_field( $type ),

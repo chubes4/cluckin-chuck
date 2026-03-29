@@ -94,37 +94,8 @@ function register_block() {
 add_action( 'init', __NAMESPACE__ . '\\register_block' );
 
 /**
- * Register REST API routes.
- *
- * @deprecated 0.2.0 Routes migrated to cluckin-chuck-api plugin under cluckin-chuck/v1 namespace.
- *             Legacy endpoints kept as redirecting stubs for backward compatibility.
+ * REST routes live in cluckin-chuck-api under the cluckin-chuck/v1 namespace.
  */
-function register_rest_routes() {
-	register_rest_route(
-		'wing-review-submit/v1',
-		'/submit',
-		array(
-			'methods'             => 'POST',
-			'callback'            => __NAMESPACE__ . '\\rest_submit_handler',
-			'permission_callback' => function( $request ) {
-				return wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' );
-			},
-		)
-	);
-
-	register_rest_route(
-		'wing-review-submit/v1',
-		'/geocode',
-		array(
-			'methods'             => 'POST',
-			'callback'            => __NAMESPACE__ . '\\rest_geocode_handler',
-			'permission_callback' => function( $request ) {
-				return wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' );
-			},
-		)
-	);
-}
-add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
 
 /**
  * Render the block on the frontend.
@@ -290,134 +261,7 @@ function render_callback() {
 	return ob_get_clean();
 }
 
-/**
- * Handle geocoding REST request.
- */
-function rest_geocode_handler( \WP_REST_Request $request ) {
-	$address = sanitize_text_field( $request->get_param( 'address' ) ?? '' );
 
-	if ( empty( $address ) ) {
-		return new \WP_REST_Response( array( 'message' => 'Address is required' ), 400 );
-	}
-
-	$result = geocode_address( $address );
-
-	if ( $result ) {
-		return new \WP_REST_Response( $result, 200 );
-	}
-
-	return new \WP_REST_Response( array( 'message' => 'Could not geocode address' ), 400 );
-}
-
-/**
- * Handle form submission REST request.
- */
-function rest_submit_handler( \WP_REST_Request $request ) {
-	$params = $request->get_params();
-
-	if ( ! empty( $params['wing_website_url'] ) ) {
-		return new \WP_REST_Response( array( 'message' => 'Spam detected' ), 400 );
-	}
-
-	$ip_hash       = md5( $_SERVER['REMOTE_ADDR'] ?? 'unknown' );
-	$transient_key = 'wing_review_submit_' . $ip_hash;
-
-	if ( get_transient( $transient_key ) ) {
-		return new \WP_REST_Response( array( 'message' => 'Please wait before submitting again' ), 429 );
-	}
-
-	set_transient( $transient_key, true, HOUR_IN_SECONDS );
-
-	$data = sanitize_form_data( $params );
-
-	if ( ! validate_form_data( $data ) ) {
-		return new \WP_REST_Response( array( 'message' => 'Please fill in all required fields' ), 400 );
-	}
-
-	$post_id = intval( $data['post_id'] ?? 0 );
-
-	if ( $post_id > 0 && get_post_type( $post_id ) === 'wing_location' ) {
-		$result = create_pending_review_comment( $post_id, $data );
-	} else {
-		$result = create_pending_location( $data );
-	}
-
-	if ( is_wp_error( $result ) ) {
-		return new \WP_REST_Response( array( 'message' => $result->get_error_message() ), 500 );
-	}
-
-	return new \WP_REST_Response(
-		array( 'message' => 'Thank you! Your submission has been received and is pending review.' ),
-		200
-	);
-}
-
-/**
- * Sanitize form data from submission.
- */
-function sanitize_form_data( $post_data ) {
-	$wing_count  = intval( $post_data['wing_count'] ?? 0 );
-	$total_price = floatval( $post_data['wing_total_price'] ?? 0 );
-	$ppw         = ( $wing_count > 0 && $total_price > 0 ) ? round( $total_price / $wing_count, 2 ) : 0;
-
-	return array(
-		'post_id'           => intval( $post_data['wing_post_id'] ?? 0 ),
-		'location_name'     => sanitize_text_field( $post_data['wing_location_name'] ?? '' ),
-		'reviewer_name'     => sanitize_text_field( $post_data['wing_reviewer_name'] ?? '' ),
-		'reviewer_email'    => sanitize_email( $post_data['wing_reviewer_email'] ?? '' ),
-		'rating'            => intval( $post_data['wing_rating'] ?? 0 ),
-		'sauce_rating'      => intval( $post_data['wing_sauce_rating'] ?? 0 ),
-		'crispiness_rating' => intval( $post_data['wing_crispiness_rating'] ?? 0 ),
-		'review_text'       => sanitize_textarea_field( $post_data['wing_review_text'] ?? '' ),
-		'wing_count'        => $wing_count,
-		'total_price'       => $total_price,
-		'ppw'               => $ppw,
-		'address'           => sanitize_text_field( $post_data['wing_address'] ?? '' ),
-		'latitude'          => floatval( $post_data['wing_latitude'] ?? 0 ),
-		'longitude'         => floatval( $post_data['wing_longitude'] ?? 0 ),
-		'website'           => esc_url_raw( $post_data['wing_website'] ?? '' ),
-		'instagram'         => esc_url_raw( $post_data['wing_instagram'] ?? '' ),
-	);
-}
-
-/**
- * Validate required form fields.
- */
-function validate_form_data( $data ) {
-	if ( empty( $data['reviewer_name'] ) ) {
-		return false;
-	}
-	if ( empty( $data['reviewer_email'] ) ) {
-		return false;
-	}
-	if ( empty( $data['rating'] ) || $data['rating'] < 1 || $data['rating'] > 5 ) {
-		return false;
-	}
-	if ( empty( $data['review_text'] ) ) {
-		return false;
-	}
-
-	$has_wing_count  = ! empty( $data['wing_count'] ) && $data['wing_count'] > 0;
-	$has_total_price = ! empty( $data['total_price'] ) && $data['total_price'] > 0;
-
-	if ( $has_wing_count !== $has_total_price ) {
-		return false;
-	}
-
-	if ( empty( $data['post_id'] ) ) {
-		if ( empty( $data['location_name'] ) ) {
-			return false;
-		}
-		if ( empty( $data['address'] ) ) {
-			return false;
-		}
-		if ( empty( $data['latitude'] ) || empty( $data['longitude'] ) ) {
-			return false;
-		}
-	}
-
-	return true;
-}
 
 /**
  * Create a pending comment for review on existing location.
@@ -526,31 +370,4 @@ function create_pending_location( $data ) {
 	return $post_id;
 }
 
-/**
- * Send notification email to admin.
- *
- * @deprecated 0.2.0 Use cluckin_chuck_review_submitted and cluckin_chuck_location_submitted actions instead.
- */
-function send_admin_email( $type, $data, $location_name ) {
-	_deprecated_function( __FUNCTION__, '0.2.0', 'cluckin_chuck_review_submitted / cluckin_chuck_location_submitted actions' );
 
-	$admin_email = get_option( 'admin_email' );
-
-	if ( $type === 'location' ) {
-		$subject  = 'New Wing Location Pending Review - ' . $location_name;
-		$message  = "A new wing location has been submitted and is pending review.\n\n";
-		$message .= "Location: {$location_name}\n";
-		$message .= "Submitted by: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
-		$message .= "Address: {$data['address']}\n";
-		$message .= "Overall Rating: {$data['rating']}/5\n\n";
-		$message .= 'Review Posts: ' . admin_url( 'edit.php?post_type=wing_location&post_status=pending' );
-	} else {
-		$subject  = 'New Wing Review Submitted - ' . $location_name;
-		$message  = "A new review has been submitted for {$location_name}.\n\n";
-		$message .= "Reviewer: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
-		$message .= "Overall Rating: {$data['rating']}/5\n\n";
-		$message .= 'Moderate Comments: ' . admin_url( 'edit-comments.php?comment_status=moderated' );
-	}
-
-	wp_mail( $admin_email, $subject, $message );
-}

@@ -1,10 +1,11 @@
 {
-  "id": "cluckin-chuck-api",
-  "remote_path": "wp-content/plugins/cluckin-chuck-api",
+  "auto_cleanup": false,
   "changelog_target": "docs/CHANGELOG.md",
   "extensions": {
     "wordpress": {}
   },
+  "id": "cluckin-chuck-api",
+  "remote_path": "wp-content/plugins/cluckin-chuck-api",
   "version_targets": [
     {
       "file": "cluckin-chuck-api.php",

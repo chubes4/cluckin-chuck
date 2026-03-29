@@ -1,10 +1,11 @@
 {
-  "id": "cluckin-chuck-agent-kit",
-  "remote_path": "wp-content/plugins/cluckin-chuck-agent-kit",
+  "auto_cleanup": false,
   "changelog_target": "docs/CHANGELOG.md",
   "extensions": {
     "wordpress": {}
   },
+  "id": "cluckin-chuck-agent-kit",
+  "remote_path": "wp-content/plugins/cluckin-chuck-agent-kit",
   "version_targets": [
     {
       "file": "cluckin-chuck-agent-kit.php",

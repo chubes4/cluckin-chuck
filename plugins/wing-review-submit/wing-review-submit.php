@@ -23,6 +23,16 @@ define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.2' );
 define( 'WING_REVIEW_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
+require_once WING_REVIEW_SUBMIT_PATH . 'inc/class-submit-abilities.php';
+
+/**
+ * Bootstrap abilities registration.
+ */
+function register_abilities() {
+	new Submit_Abilities();
+}
+add_action( 'init', __NAMESPACE__ . '\\register_abilities' );
+
 /**
  * Get the theme's meta helper class if available.
  */
@@ -432,7 +442,16 @@ function create_pending_review_comment( $post_id, $data ) {
 		add_comment_meta( $comment_id, 'wing_ppw', $data['ppw'] );
 	}
 
-	send_admin_email( 'review', $data, get_the_title( $post_id ) );
+	/**
+	 * Fires after a wing review comment is submitted and pending moderation.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param int    $comment_id    The new comment ID.
+	 * @param array  $data          Sanitized submission data.
+	 * @param string $location_name The wing location title.
+	 */
+	do_action( 'cluckin_chuck_review_submitted', $comment_id, $data, get_the_title( $post_id ) );
 
 	return $comment_id;
 }
@@ -488,15 +507,27 @@ function create_pending_location( $data ) {
 		) );
 	}
 
-	send_admin_email( 'location', $data, $data['location_name'] );
+	/**
+	 * Fires after a new wing location is submitted and pending approval.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param int   $post_id The new pending post ID.
+	 * @param array $data    Sanitized submission data.
+	 */
+	do_action( 'cluckin_chuck_location_submitted', $post_id, $data );
 
 	return $post_id;
 }
 
 /**
  * Send notification email to admin.
+ *
+ * @deprecated 0.2.0 Use cluckin_chuck_review_submitted and cluckin_chuck_location_submitted actions instead.
  */
 function send_admin_email( $type, $data, $location_name ) {
+	_deprecated_function( __FUNCTION__, '0.2.0', 'cluckin_chuck_review_submitted / cluckin_chuck_location_submitted actions' );
+
 	$admin_email = get_option( 'admin_email' );
 
 	if ( $type === 'location' ) {

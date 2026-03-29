@@ -1,0 +1,52 @@
+<?php
+/**
+ * GET /cluckin-chuck/v1/locations/<id>
+ *
+ * Retrieve a single wing location's details.
+ *
+ * @package CluckinChuck\API
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+add_action( 'cluckin_chuck_api_register_routes', 'cluckin_chuck_api_register_location_get_route' );
+
+function cluckin_chuck_api_register_location_get_route() {
+	register_rest_route(
+		'cluckin-chuck/v1',
+		'/locations/(?P<id>\d+)',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'cluckin_chuck_api_location_get_handler',
+			'permission_callback' => function () {
+				return current_user_can( 'edit_posts' );
+			},
+			'args'                => array(
+				'id' => array(
+					'type'              => 'integer',
+					'required'          => true,
+					'sanitize_callback' => 'absint',
+				),
+			),
+		)
+	);
+}
+
+function cluckin_chuck_api_location_get_handler( WP_REST_Request $request ) {
+	$ability = wp_get_ability( 'cluckin-chuck/get-location' );
+
+	if ( ! $ability ) {
+		return new WP_Error( 'ability_missing', 'Location ability not available.', array( 'status' => 500 ) );
+	}
+
+	$result = $ability->execute( array( 'post_id' => $request->get_param( 'id' ) ) );
+
+	if ( is_wp_error( $result ) ) {
+		$status = 'not_found' === $result->get_error_code() ? 404 : 500;
+		return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+	}
+
+	return rest_ensure_response( $result );
+}

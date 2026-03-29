@@ -1,0 +1,18 @@
+{
+  "id": "cluckin-chuck-cli",
+  "remote_path": "wp-content/plugins/cluckin-chuck-cli",
+  "changelog_target": "docs/CHANGELOG.md",
+  "extensions": {
+    "wordpress": {}
+  },
+  "version_targets": [
+    {
+      "file": "cluckin-chuck-cli.php",
+      "pattern": "(?m)^\\s*\\*?\\s*Version:\\s*([0-9.]+)"
+    },
+    {
+      "file": "cluckin-chuck-cli.php",
+      "pattern": "CLUCKIN_CHUCK_CLI_VERSION',\\s*'([0-9.]+)'"
+    }
+  ]
+}

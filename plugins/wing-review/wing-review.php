@@ -23,6 +23,16 @@ define( 'WING_REVIEW_VERSION', '0.1.2' );
 define( 'WING_REVIEW_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_URL', plugin_dir_url( __FILE__ ) );
 
+require_once WING_REVIEW_PATH . 'inc/class-review-abilities.php';
+
+/**
+ * Bootstrap abilities registration.
+ */
+function register_abilities() {
+	new Review_Abilities();
+}
+add_action( 'init', __NAMESPACE__ . '\\register_abilities' );
+
 /**
  * Get the theme's meta helper class if available
  */

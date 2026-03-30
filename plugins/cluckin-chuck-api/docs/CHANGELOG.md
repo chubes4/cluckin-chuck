@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.1] - 2026-03-30
+
+### Added
+- add reject-review, approve-location, reject-location across all surfaces
+
+### Changed
+- Add cluckin-chuck-cli and cluckin-chuck-api plugins (v0.1.0)
+
+### Fixed
+- add page.html template and index.php fallback, update lockfiles and homeboy configs
+
 ## 0.1.0
 
 - Initial release

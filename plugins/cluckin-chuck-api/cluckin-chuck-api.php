@@ -3,7 +3,7 @@
  * Plugin Name: Cluckin' Chuck API
  * Plugin URI: https://cluckinchuck.saraichinwag.com
  * Description: Central REST API for Cluckin' Chuck. Unified endpoint namespace wrapping abilities from wing plugins.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUCKIN_CHUCK_API_VERSION', '0.1.0' );
+define( 'CLUCKIN_CHUCK_API_VERSION', '0.1.1' );
 
 if ( ! defined( 'CLUCKIN_CHUCK_API_PATH' ) ) {
 	define( 'CLUCKIN_CHUCK_API_PATH', plugin_dir_path( __FILE__ ) );

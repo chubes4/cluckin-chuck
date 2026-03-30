@@ -3,7 +3,7 @@
  * Plugin Name: Cluckin' Chuck Agent Kit
  * Plugin URI: https://cluckinchuck.saraichinwag.com
  * Description: Chat tools and agent configuration for the Cluckin' Chuck AI assistant. Bridges abilities to Data Machine's chat system.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.1.0' );
+define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.1.1' );
 define( 'CLUCKIN_CHUCK_AGENT_KIT_PATH', plugin_dir_path( __FILE__ ) );
 
 // Load tool classes.

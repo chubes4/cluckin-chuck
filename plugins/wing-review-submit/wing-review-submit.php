@@ -3,7 +3,7 @@
  * Plugin Name: Wing Review Submit
  * Plugin URI: https://chubes.net
  * Description: Frontend submission form block for new wing locations and reviews
- * Version: 0.1.2
+ * Version: 0.1.3
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.2' );
+define( 'WING_REVIEW_SUBMIT_VERSION', '0.1.3' );
 define( 'WING_REVIEW_SUBMIT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_REVIEW_SUBMIT_URL', plugin_dir_url( __FILE__ ) );
 
@@ -369,5 +369,3 @@ function create_pending_location( $data ) {
 
 	return $post_id;
 }
-
-

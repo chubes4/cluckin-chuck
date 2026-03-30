@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] - 2026-03-30
+
+### Added
+- auto-fill reviewer identity from logged-in user account
+
 ## [0.1.1] - 2026-03-30
 
 ### Added

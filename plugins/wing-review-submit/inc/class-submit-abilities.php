@@ -123,7 +123,7 @@ class Submit_Abilities {
 			'cluckin-chuck/submit-review',
 			array(
 				'label'               => __( 'Submit Review', 'wing-review-submit' ),
-				'description'         => __( 'Submit a new wing review for an existing location. Creates a pending comment awaiting moderation.', 'wing-review-submit' ),
+				'description'         => __( 'Submit a new wing review for an existing location. Creates a pending comment awaiting moderation. Auto-approved when submitted by a user with moderation privileges.', 'wing-review-submit' ),
 				'category'            => 'cluckin-chuck',
 				'input_schema'        => array(
 					'type'       => 'object',
@@ -179,9 +179,10 @@ class Submit_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'success'    => array( 'type' => 'boolean' ),
-						'comment_id' => array( 'type' => 'integer' ),
-						'post_id'    => array( 'type' => 'integer' ),
+						'success'       => array( 'type' => 'boolean' ),
+						'comment_id'    => array( 'type' => 'integer' ),
+						'post_id'       => array( 'type' => 'integer' ),
+						'auto_approved' => array( 'type' => 'boolean' ),
 					),
 				),
 				'execute_callback'    => array( $this, 'execute_submit_review' ),
@@ -253,10 +254,19 @@ class Submit_Abilities {
 			return $comment_id;
 		}
 
+		$auto_approved = false;
+
+		// Auto-approve reviews submitted by users who can moderate comments.
+		if ( current_user_can( 'moderate_comments' ) ) {
+			wp_set_comment_status( $comment_id, 'approve' );
+			$auto_approved = true;
+		}
+
 		return array(
-			'success'    => true,
-			'comment_id' => $comment_id,
-			'post_id'    => $post_id,
+			'success'       => true,
+			'comment_id'    => $comment_id,
+			'post_id'       => $post_id,
+			'auto_approved' => $auto_approved,
 		);
 	}
 
@@ -269,7 +279,7 @@ class Submit_Abilities {
 			'cluckin-chuck/submit-location',
 			array(
 				'label'               => __( 'Submit Location', 'wing-review-submit' ),
-				'description'         => __( 'Submit a new wing location with an initial review. Creates a pending post awaiting admin approval.', 'wing-review-submit' ),
+				'description'         => __( 'Submit a new wing location with an initial review. Creates a pending post awaiting admin approval. Auto-published when submitted by a user with publish privileges.', 'wing-review-submit' ),
 				'category'            => 'cluckin-chuck',
 				'input_schema'        => array(
 					'type'       => 'object',
@@ -331,8 +341,9 @@ class Submit_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'success' => array( 'type' => 'boolean' ),
-						'post_id' => array( 'type' => 'integer' ),
+						'success'        => array( 'type' => 'boolean' ),
+						'post_id'        => array( 'type' => 'integer' ),
+						'auto_published' => array( 'type' => 'boolean' ),
 					),
 				),
 				'execute_callback'    => array( $this, 'execute_submit_location' ),
@@ -402,9 +413,18 @@ class Submit_Abilities {
 			return $post_id;
 		}
 
+		$auto_published = false;
+
+		// Auto-publish locations submitted by users who can publish posts.
+		if ( current_user_can( 'publish_posts' ) ) {
+			wp_publish_post( $post_id );
+			$auto_published = true;
+		}
+
 		return array(
-			'success' => true,
-			'post_id' => $post_id,
+			'success'        => true,
+			'post_id'        => $post_id,
+			'auto_published' => $auto_published,
 		);
 	}
 

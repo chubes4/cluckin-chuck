@@ -2,8 +2,9 @@
 /**
  * Wing Review Abilities API — review management abilities.
  *
- * Registers three abilities:
+ * Registers four abilities:
  *   - cluckin-chuck/approve-review
+ *   - cluckin-chuck/reject-review
  *   - cluckin-chuck/recalculate-stats
  *   - cluckin-chuck/list-reviews
  *
@@ -49,6 +50,7 @@ class Review_Abilities {
 	private function register_abilities(): void {
 		$register = function () {
 			$this->register_approve_review();
+			$this->register_reject_review();
 			$this->register_recalculate_stats();
 			$this->register_list_reviews();
 		};
@@ -166,6 +168,106 @@ class Review_Abilities {
 			'reviewer'     => $comment->comment_author,
 			'rating'       => floatval( $rating ),
 			'review_count' => intval( $meta['wing_review_count'] ?? 0 ),
+		);
+	}
+
+	// ------------------------------------------------------------------
+	// cluckin-chuck/reject-review
+	// ------------------------------------------------------------------
+
+	private function register_reject_review(): void {
+		wp_register_ability(
+			'cluckin-chuck/reject-review',
+			array(
+				'label'               => __( 'Reject Review', 'wing-review' ),
+				'description'         => __( 'Reject a pending wing review comment by trashing it.', 'wing-review' ),
+				'category'            => 'cluckin-chuck',
+				'input_schema'        => array(
+					'type'       => 'object',
+					'required'   => array( 'comment_id' ),
+					'properties' => array(
+						'comment_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The pending review comment ID to reject.', 'wing-review' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'success'    => array( 'type' => 'boolean' ),
+						'comment_id' => array( 'type' => 'integer' ),
+						'post_id'    => array( 'type' => 'integer' ),
+						'reviewer'   => array( 'type' => 'string' ),
+					),
+				),
+				'execute_callback'    => array( $this, 'execute_reject_review' ),
+				'permission_callback' => function () {
+					return current_user_can( 'moderate_comments' ) || ( defined( 'WP_CLI' ) && WP_CLI );
+				},
+				'meta'                => array(
+					'show_in_rest' => true,
+					'annotations'  => array( 'destructive' => true ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Execute: reject-review.
+	 *
+	 * Trashes a pending review comment.
+	 *
+	 * @param array $input { comment_id: int }.
+	 * @return array|\WP_Error
+	 */
+	public function execute_reject_review( array $input ) {
+		$comment_id = absint( $input['comment_id'] ?? 0 );
+		$comment    = get_comment( $comment_id );
+
+		if ( ! $comment ) {
+			return new \WP_Error(
+				'not_found',
+				__( 'Comment not found.', 'wing-review' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$post = get_post( $comment->comment_post_ID );
+
+		if ( ! $post || 'wing_location' !== $post->post_type ) {
+			return new \WP_Error(
+				'invalid_post_type',
+				__( 'Comment is not on a wing location post.', 'wing-review' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$rating = get_comment_meta( $comment_id, 'wing_rating', true );
+
+		if ( empty( $rating ) ) {
+			return new \WP_Error(
+				'not_a_review',
+				__( 'Comment does not have wing review metadata.', 'wing-review' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$result = wp_trash_comment( $comment_id );
+
+		if ( ! $result ) {
+			return new \WP_Error(
+				'rejection_failed',
+				__( 'Failed to trash comment.', 'wing-review' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return array(
+			'success'    => true,
+			'comment_id' => $comment_id,
+			'post_id'    => $post->ID,
+			'reviewer'   => $comment->comment_author,
 		);
 	}
 

@@ -3,7 +3,9 @@
  * Wing Location CLI Commands.
  *
  * Wraps cluckin-chuck/get-location, cluckin-chuck/update-location,
- * cluckin-chuck/list-locations, and cluckin-chuck/geocode-address abilities.
+ * cluckin-chuck/list-locations, cluckin-chuck/geocode-address,
+ * cluckin-chuck/approve-location, cluckin-chuck/reject-location,
+ * and cluckin-chuck/submit-location abilities.
  *
  * @package CluckinChuck\CLI\Commands\Locations
  */
@@ -295,6 +297,180 @@ class LocationCommand {
 		}
 
 		WP_CLI::success( sprintf( 'Geocoded: lat=%s, lng=%s', $result['lat'], $result['lng'] ) );
+	}
+
+	/**
+	 * Submit a new wing location with an initial review.
+	 *
+	 * ## OPTIONS
+	 *
+	 * --name=<location_name>
+	 * : Name of the wing restaurant.
+	 *
+	 * --address=<address>
+	 * : Street address.
+	 *
+	 * --latitude=<latitude>
+	 * : Latitude coordinate.
+	 *
+	 * --longitude=<longitude>
+	 * : Longitude coordinate.
+	 *
+	 * --reviewer-name=<reviewer_name>
+	 * : Reviewer's name.
+	 *
+	 * --reviewer-email=<reviewer_email>
+	 * : Reviewer's email.
+	 *
+	 * --rating=<rating>
+	 * : Overall rating (1-5).
+	 *
+	 * --text=<review_text>
+	 * : Review text.
+	 *
+	 * [--website=<website>]
+	 * : Restaurant website URL.
+	 *
+	 * [--instagram=<instagram>]
+	 * : Restaurant Instagram URL.
+	 *
+	 * [--sauce-rating=<sauce_rating>]
+	 * : Sauce rating (1-5).
+	 *
+	 * [--crispiness-rating=<crispiness_rating>]
+	 * : Crispiness rating (1-5).
+	 *
+	 * [--wing-count=<wing_count>]
+	 * : Number of wings ordered.
+	 *
+	 * [--total-price=<total_price>]
+	 * : Total price paid.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck locations submit --name="Wing King" --address="123 Main St" --latitude=32.82 --longitude=-80.03 --reviewer-name="Chuck" --reviewer-email="chuck@example.com" --rating=5 --text="Best wings ever"
+	 *
+	 * @subcommand submit
+	 * @when after_wp_load
+	 */
+	public function submit( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/submit-location' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/submit-location is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$input = array(
+			'location_name'     => $assoc_args['name'] ?? '',
+			'address'           => $assoc_args['address'] ?? '',
+			'latitude'          => floatval( $assoc_args['latitude'] ?? 0 ),
+			'longitude'         => floatval( $assoc_args['longitude'] ?? 0 ),
+			'reviewer_name'     => $assoc_args['reviewer-name'] ?? '',
+			'reviewer_email'    => $assoc_args['reviewer-email'] ?? '',
+			'rating'            => intval( $assoc_args['rating'] ?? 0 ),
+			'review_text'       => $assoc_args['text'] ?? '',
+			'website'           => $assoc_args['website'] ?? '',
+			'instagram'         => $assoc_args['instagram'] ?? '',
+			'sauce_rating'      => intval( $assoc_args['sauce-rating'] ?? 0 ),
+			'crispiness_rating' => intval( $assoc_args['crispiness-rating'] ?? 0 ),
+			'wing_count'        => intval( $assoc_args['wing-count'] ?? 0 ),
+			'total_price'       => floatval( $assoc_args['total-price'] ?? 0 ),
+		);
+
+		$result = $ability->execute( $input );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		$msg = sprintf(
+			'Location submitted (post %d).',
+			$result['post_id']
+		);
+
+		if ( ! empty( $result['auto_published'] ) ) {
+			$msg .= ' Auto-published.';
+		} else {
+			$msg .= ' Pending admin approval.';
+		}
+
+		WP_CLI::success( $msg );
+	}
+
+	/**
+	 * Approve a pending wing location.
+	 *
+	 * Publishes the pending wing_location post.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post_id>
+	 * : The pending wing_location post ID to approve.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck locations approve 24
+	 *
+	 * @when after_wp_load
+	 */
+	public function approve( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/approve-location' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/approve-location is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'post_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Published location "%s" (ID: %d). URL: %s',
+			$result['title'],
+			$result['post_id'],
+			$result['url']
+		) );
+	}
+
+	/**
+	 * Reject a pending wing location.
+	 *
+	 * Trashes the pending wing_location post.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post_id>
+	 * : The pending wing_location post ID to reject.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck locations reject 24
+	 *
+	 * @when after_wp_load
+	 */
+	public function reject( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/reject-location' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/reject-location is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'post_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Rejected location "%s" (ID: %d, trashed).',
+			$result['title'],
+			$result['post_id']
+		) );
 	}
 
 	/**

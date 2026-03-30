@@ -3,7 +3,8 @@
  * Wing Review CLI Commands.
  *
  * Wraps cluckin-chuck/list-reviews, cluckin-chuck/approve-review,
- * cluckin-chuck/recalculate-stats, and cluckin-chuck/list-pending abilities.
+ * cluckin-chuck/reject-review, cluckin-chuck/recalculate-stats,
+ * cluckin-chuck/list-pending, and cluckin-chuck/submit-review abilities.
  *
  * @package CluckinChuck\CLI\Commands\Reviews
  */
@@ -18,6 +19,86 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class ReviewCommand {
+
+	/**
+	 * Submit a wing review for an existing location.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post_id>
+	 * : The wing_location post ID to review.
+	 *
+	 * --name=<name>
+	 * : Reviewer's name.
+	 *
+	 * --email=<email>
+	 * : Reviewer's email.
+	 *
+	 * --rating=<rating>
+	 * : Overall rating (1-5).
+	 *
+	 * --text=<text>
+	 * : Review text.
+	 *
+	 * [--sauce-rating=<sauce_rating>]
+	 * : Sauce rating (1-5).
+	 *
+	 * [--crispiness-rating=<crispiness_rating>]
+	 * : Crispiness rating (1-5).
+	 *
+	 * [--wing-count=<wing_count>]
+	 * : Number of wings ordered.
+	 *
+	 * [--total-price=<total_price>]
+	 * : Total price paid.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck reviews submit 42 --name="Chuck" --email="chuck@example.com" --rating=4 --text="Great wings"
+	 *
+	 * @subcommand submit
+	 * @when after_wp_load
+	 */
+	public function submit( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/submit-review' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/submit-review is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$input = array(
+			'post_id'           => intval( $args[0] ),
+			'reviewer_name'     => $assoc_args['name'] ?? '',
+			'reviewer_email'    => $assoc_args['email'] ?? '',
+			'rating'            => intval( $assoc_args['rating'] ?? 0 ),
+			'review_text'       => $assoc_args['text'] ?? '',
+			'sauce_rating'      => intval( $assoc_args['sauce-rating'] ?? 0 ),
+			'crispiness_rating' => intval( $assoc_args['crispiness-rating'] ?? 0 ),
+			'wing_count'        => intval( $assoc_args['wing-count'] ?? 0 ),
+			'total_price'       => floatval( $assoc_args['total-price'] ?? 0 ),
+		);
+
+		$result = $ability->execute( $input );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		$msg = sprintf(
+			'Review submitted (comment %d on location %d).',
+			$result['comment_id'],
+			$result['post_id']
+		);
+
+		if ( ! empty( $result['auto_approved'] ) ) {
+			$msg .= ' Auto-approved.';
+		} else {
+			$msg .= ' Pending moderation.';
+		}
+
+		WP_CLI::success( $msg );
+	}
 
 	/**
 	 * List reviews for a wing location.
@@ -112,6 +193,44 @@ class ReviewCommand {
 			$result['rating'],
 			$result['post_id'],
 			$result['review_count']
+		) );
+	}
+
+	/**
+	 * Reject a pending wing review.
+	 *
+	 * Trashes the pending review comment.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <comment_id>
+	 * : The pending review comment ID to reject.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck reviews reject 15
+	 *
+	 * @when after_wp_load
+	 */
+	public function reject( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/reject-review' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/reject-review is not registered. Ensure wing-review plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'comment_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Rejected review by %s on location %d (comment %d trashed).',
+			$result['reviewer'],
+			$result['post_id'],
+			$result['comment_id']
 		) );
 	}
 

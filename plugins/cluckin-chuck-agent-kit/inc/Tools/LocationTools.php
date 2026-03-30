@@ -7,6 +7,8 @@
  *   - get_location (public)
  *   - update_location (admin)
  *   - geocode_address (public)
+ *   - approve_wing_location (admin)
+ *   - reject_wing_location (admin)
  *
  * @package CluckinChuck\AgentKit\Tools
  */
@@ -41,6 +43,16 @@ class LocationTools {
 
 		$tools['geocode_address'] = array(
 			'_callable' => array( $this, 'get_geocode_def' ),
+			'contexts'  => array( 'chat' ),
+		);
+
+		$tools['approve_wing_location'] = array(
+			'_callable' => array( $this, 'get_approve_location_def' ),
+			'contexts'  => array( 'chat' ),
+		);
+
+		$tools['reject_wing_location'] = array(
+			'_callable' => array( $this, 'get_reject_location_def' ),
 			'contexts'  => array( 'chat' ),
 		);
 
@@ -135,6 +147,40 @@ class LocationTools {
 		);
 	}
 
+	public function get_approve_location_def(): array {
+		return array(
+			'class'        => self::class,
+			'method'       => 'handle_tool_call',
+			'description'  => 'Approve and publish a pending wing location submission. Use when an admin wants to approve a location that was submitted by a public user.',
+			'ability'      => 'cluckin-chuck/approve-location',
+			'access_level' => 'admin',
+			'parameters'   => array(
+				'post_id' => array(
+					'type'        => 'integer',
+					'required'    => true,
+					'description' => 'The pending wing location post ID to publish.',
+				),
+			),
+		);
+	}
+
+	public function get_reject_location_def(): array {
+		return array(
+			'class'        => self::class,
+			'method'       => 'handle_tool_call',
+			'description'  => 'Reject a pending wing location submission by trashing it. Use when an admin wants to decline a submitted location.',
+			'ability'      => 'cluckin-chuck/reject-location',
+			'access_level' => 'admin',
+			'parameters'   => array(
+				'post_id' => array(
+					'type'        => 'integer',
+					'required'    => true,
+					'description' => 'The pending wing location post ID to reject.',
+				),
+			),
+		);
+	}
+
 	// ------------------------------------------------------------------
 	// Tool handler
 	// ------------------------------------------------------------------
@@ -206,6 +252,10 @@ class LocationTools {
 
 			case 'cluckin-chuck/geocode-address':
 				return array( 'address' => $parameters['address'] ?? '' );
+
+			case 'cluckin-chuck/approve-location':
+			case 'cluckin-chuck/reject-location':
+				return array( 'post_id' => intval( $parameters['post_id'] ?? 0 ) );
 
 			default:
 				return $parameters;

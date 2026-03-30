@@ -131,21 +131,21 @@ class Submit_Abilities {
 				'category'            => 'cluckin-chuck',
 				'input_schema'        => array(
 					'type'       => 'object',
-					'required'   => array( 'post_id', 'reviewer_name', 'reviewer_email', 'rating', 'review_text' ),
+					'required'   => array( 'post_id', 'rating', 'review_text' ),
 					'properties' => array(
 						'post_id'           => array(
 							'type'        => 'integer',
 							'description' => __( 'The wing_location post ID to review.', 'wing-review-submit' ),
 						),
-						'reviewer_name'     => array(
-							'type'        => 'string',
-							'description' => __( 'Reviewer\'s name.', 'wing-review-submit' ),
-						),
-						'reviewer_email'    => array(
-							'type'        => 'string',
-							'format'      => 'email',
-							'description' => __( 'Reviewer\'s email.', 'wing-review-submit' ),
-						),
+					'reviewer_name'     => array(
+						'type'        => 'string',
+						'description' => __( 'Reviewer\'s name. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+					),
+					'reviewer_email'    => array(
+						'type'        => 'string',
+						'format'      => 'email',
+						'description' => __( 'Reviewer\'s email. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+					),
 						'rating'            => array(
 							'type'        => 'integer',
 							'minimum'     => 1,
@@ -230,10 +230,21 @@ class Submit_Abilities {
 			'total_price'       => floatval( $input['total_price'] ?? 0 ),
 		);
 
+		// Auto-fill reviewer identity from the logged-in user.
+		$current_user = wp_get_current_user();
+		if ( $current_user->ID ) {
+			if ( empty( $data['reviewer_name'] ) ) {
+				$data['reviewer_name'] = $current_user->display_name;
+			}
+			if ( empty( $data['reviewer_email'] ) ) {
+				$data['reviewer_email'] = $current_user->user_email;
+			}
+		}
+
 		if ( empty( $data['reviewer_name'] ) || empty( $data['reviewer_email'] ) || empty( $data['review_text'] ) ) {
 			return new \WP_Error(
 				'missing_fields',
-				__( 'Name, email, and review text are required.', 'wing-review-submit' ),
+				__( 'Name, email, and review text are required. Log in or provide them manually.', 'wing-review-submit' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -287,7 +298,7 @@ class Submit_Abilities {
 				'category'            => 'cluckin-chuck',
 				'input_schema'        => array(
 					'type'       => 'object',
-					'required'   => array( 'location_name', 'address', 'latitude', 'longitude', 'reviewer_name', 'reviewer_email', 'rating', 'review_text' ),
+					'required'   => array( 'location_name', 'address', 'latitude', 'longitude', 'rating', 'review_text' ),
 					'properties' => array(
 						'location_name'     => array(
 							'type'        => 'string',
@@ -307,11 +318,15 @@ class Submit_Abilities {
 							'type'    => 'string',
 							'default' => '',
 						),
-						'reviewer_name'     => array( 'type' => 'string' ),
-						'reviewer_email'    => array(
-							'type'   => 'string',
-							'format' => 'email',
-						),
+					'reviewer_name'     => array(
+						'type'        => 'string',
+						'description' => __( 'Reviewer\'s name. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+					),
+					'reviewer_email'    => array(
+						'type'        => 'string',
+						'format'      => 'email',
+						'description' => __( 'Reviewer\'s email. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+					),
 						'rating'            => array(
 							'type'    => 'integer',
 							'minimum' => 1,
@@ -389,6 +404,17 @@ class Submit_Abilities {
 			? round( $data['total_price'] / $data['wing_count'], 2 )
 			: 0;
 		$data['ppw'] = $ppw;
+
+		// Auto-fill reviewer identity from the logged-in user.
+		$current_user = wp_get_current_user();
+		if ( $current_user->ID ) {
+			if ( empty( $data['reviewer_name'] ) ) {
+				$data['reviewer_name'] = $current_user->display_name;
+			}
+			if ( empty( $data['reviewer_email'] ) ) {
+				$data['reviewer_email'] = $current_user->user_email;
+			}
+		}
 
 		// Validate required fields.
 		$required = array( 'location_name', 'address', 'reviewer_name', 'reviewer_email', 'review_text' );

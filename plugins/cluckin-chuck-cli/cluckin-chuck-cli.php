@@ -3,7 +3,7 @@
  * Plugin Name: Cluckin' Chuck CLI
  * Plugin URI: https://cluckinchuck.saraichinwag.com
  * Description: WP-CLI command surface for Cluckin' Chuck. Wraps abilities from wing plugins into a unified `wp cluckinchuck` namespace.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUCKIN_CHUCK_CLI_VERSION', '0.1.0' );
+define( 'CLUCKIN_CHUCK_CLI_VERSION', '0.1.1' );
 define( 'CLUCKIN_CHUCK_CLI_PATH', plugin_dir_path( __FILE__ ) );
 
 // Only load in WP-CLI context.

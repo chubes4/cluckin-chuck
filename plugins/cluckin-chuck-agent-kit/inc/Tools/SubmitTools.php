@@ -47,9 +47,10 @@ class SubmitTools {
 			'class'        => self::class,
 			'method'       => 'handle_tool_call',
 			'description'  => 'Submit a wing review for an existing location. Creates a pending review awaiting moderation. '
-				. 'Use this when a user wants to review a place that already exists in the system. '
-				. 'Extract these details from the conversation: their name, email, overall rating (1-5), '
-				. 'review text, and optionally sauce rating, crispiness rating, number of wings, and total price. '
+				. 'Auto-approved when submitted by a user with moderation privileges. '
+				. 'For LOGGED-IN users: do NOT ask for name or email — omit reviewer_name and reviewer_email and the system auto-fills from their account. '
+				. 'For anonymous/public users: ask for name and email. '
+				. 'Extract: overall rating (1-5), review text, and optionally sauce rating, crispiness rating, number of wings, and total price. '
 				. 'Always confirm the extracted data with the user before submitting. '
 				. 'You must first use list_wing_locations to find the location\'s post_id.',
 			'ability'      => 'cluckin-chuck/submit-review',
@@ -62,13 +63,13 @@ class SubmitTools {
 				),
 				'reviewer_name' => array(
 					'type'        => 'string',
-					'required'    => true,
-					'description' => 'Reviewer\'s display name.',
+					'required'    => false,
+					'description' => 'Reviewer\'s display name. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'reviewer_email' => array(
 					'type'        => 'string',
-					'required'    => true,
-					'description' => 'Reviewer\'s email address.',
+					'required'    => false,
+					'description' => 'Reviewer\'s email address. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'rating' => array(
 					'type'        => 'integer',
@@ -109,7 +110,9 @@ class SubmitTools {
 			'class'        => self::class,
 			'method'       => 'handle_tool_call',
 			'description'  => 'Submit a brand new wing location with an initial review. Creates a pending location awaiting admin approval. '
-				. 'Use this when a user mentions a restaurant that does NOT exist in the system yet. '
+				. 'Auto-published when submitted by a user with publish privileges. '
+				. 'For LOGGED-IN users: do NOT ask for name or email — omit reviewer_name and reviewer_email and the system auto-fills from their account. '
+				. 'For anonymous/public users: ask for name and email. '
 				. 'First use list_wing_locations to confirm it doesn\'t already exist, then use geocode_address to get coordinates. '
 				. 'Extract location name, address, and review details from the conversation. '
 				. 'Always confirm the extracted data with the user before submitting.',
@@ -138,13 +141,13 @@ class SubmitTools {
 				),
 				'reviewer_name' => array(
 					'type'        => 'string',
-					'required'    => true,
-					'description' => 'Reviewer\'s display name.',
+					'required'    => false,
+					'description' => 'Reviewer\'s display name. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'reviewer_email' => array(
 					'type'        => 'string',
-					'required'    => true,
-					'description' => 'Reviewer\'s email address.',
+					'required'    => false,
+					'description' => 'Reviewer\'s email address. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'rating' => array(
 					'type'        => 'integer',

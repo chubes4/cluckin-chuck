@@ -5,6 +5,7 @@
  * Tools registered:
  *   - list_wing_reviews (public)
  *   - approve_wing_review (admin)
+ *   - reject_wing_review (admin)
  *   - recalculate_wing_stats (admin)
  *   - list_pending_submissions (admin)
  *
@@ -31,6 +32,11 @@ class ReviewTools {
 
 		$tools['approve_wing_review'] = array(
 			'_callable' => array( $this, 'get_approve_def' ),
+			'contexts'  => array( 'chat' ),
+		);
+
+		$tools['reject_wing_review'] = array(
+			'_callable' => array( $this, 'get_reject_def' ),
 			'contexts'  => array( 'chat' ),
 		);
 
@@ -80,6 +86,23 @@ class ReviewTools {
 					'type'        => 'integer',
 					'required'    => true,
 					'description' => 'The pending review comment ID to approve.',
+				),
+			),
+		);
+	}
+
+	public function get_reject_def(): array {
+		return array(
+			'class'        => self::class,
+			'method'       => 'handle_tool_call',
+			'description'  => 'Reject a pending wing review by trashing the comment. Use when an admin wants to decline or remove a submitted review.',
+			'ability'      => 'cluckin-chuck/reject-review',
+			'access_level' => 'admin',
+			'parameters'   => array(
+				'comment_id' => array(
+					'type'        => 'integer',
+					'required'    => true,
+					'description' => 'The pending review comment ID to reject.',
 				),
 			),
 		);
@@ -172,6 +195,7 @@ class ReviewTools {
 				return array( 'post_id' => intval( $parameters['post_id'] ?? 0 ) );
 
 			case 'cluckin-chuck/approve-review':
+			case 'cluckin-chuck/reject-review':
 				return array( 'comment_id' => intval( $parameters['comment_id'] ?? 0 ) );
 
 			case 'cluckin-chuck/recalculate-stats':

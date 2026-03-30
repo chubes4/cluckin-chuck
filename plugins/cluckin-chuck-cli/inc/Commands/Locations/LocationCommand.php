@@ -3,7 +3,8 @@
  * Wing Location CLI Commands.
  *
  * Wraps cluckin-chuck/get-location, cluckin-chuck/update-location,
- * cluckin-chuck/list-locations, and cluckin-chuck/geocode-address abilities.
+ * cluckin-chuck/list-locations, cluckin-chuck/geocode-address,
+ * cluckin-chuck/approve-location, and cluckin-chuck/reject-location abilities.
  *
  * @package CluckinChuck\CLI\Commands\Locations
  */
@@ -295,6 +296,81 @@ class LocationCommand {
 		}
 
 		WP_CLI::success( sprintf( 'Geocoded: lat=%s, lng=%s', $result['lat'], $result['lng'] ) );
+	}
+
+	/**
+	 * Approve a pending wing location.
+	 *
+	 * Publishes the pending wing_location post.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post_id>
+	 * : The pending wing_location post ID to approve.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck locations approve 24
+	 *
+	 * @when after_wp_load
+	 */
+	public function approve( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/approve-location' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/approve-location is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'post_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Published location "%s" (ID: %d). URL: %s',
+			$result['title'],
+			$result['post_id'],
+			$result['url']
+		) );
+	}
+
+	/**
+	 * Reject a pending wing location.
+	 *
+	 * Trashes the pending wing_location post.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post_id>
+	 * : The pending wing_location post ID to reject.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck locations reject 24
+	 *
+	 * @when after_wp_load
+	 */
+	public function reject( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/reject-location' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/reject-location is not registered. Ensure wing-review-submit plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'post_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Rejected location "%s" (ID: %d, trashed).',
+			$result['title'],
+			$result['post_id']
+		) );
 	}
 
 	/**

@@ -2,9 +2,11 @@
 /**
  * Wing Review Submit Abilities API — submission abilities.
  *
- * Registers three abilities:
+ * Registers five abilities:
  *   - cluckin-chuck/submit-review
  *   - cluckin-chuck/submit-location
+ *   - cluckin-chuck/approve-location
+ *   - cluckin-chuck/reject-location
  *   - cluckin-chuck/list-pending
  *
  * Fires actions for side-effects (admin email notifications):
@@ -55,6 +57,8 @@ class Submit_Abilities {
 		$register = function () {
 			$this->register_submit_review();
 			$this->register_submit_location();
+			$this->register_approve_location();
+			$this->register_reject_location();
 			$this->register_list_pending();
 		};
 
@@ -425,6 +429,173 @@ class Submit_Abilities {
 			'success'        => true,
 			'post_id'        => $post_id,
 			'auto_published' => $auto_published,
+		);
+	}
+
+	// ------------------------------------------------------------------
+	// cluckin-chuck/approve-location
+	// ------------------------------------------------------------------
+
+	private function register_approve_location(): void {
+		wp_register_ability(
+			'cluckin-chuck/approve-location',
+			array(
+				'label'               => __( 'Approve Location', 'wing-review-submit' ),
+				'description'         => __( 'Publish a pending wing location submission.', 'wing-review-submit' ),
+				'category'            => 'cluckin-chuck',
+				'input_schema'        => array(
+					'type'       => 'object',
+					'required'   => array( 'post_id' ),
+					'properties' => array(
+						'post_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The pending wing_location post ID to publish.', 'wing-review-submit' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'success' => array( 'type' => 'boolean' ),
+						'post_id' => array( 'type' => 'integer' ),
+						'title'   => array( 'type' => 'string' ),
+						'url'     => array( 'type' => 'string' ),
+					),
+				),
+				'execute_callback'    => array( $this, 'execute_approve_location' ),
+				'permission_callback' => function () {
+					return current_user_can( 'publish_posts' ) || ( defined( 'WP_CLI' ) && WP_CLI );
+				},
+				'meta'                => array(
+					'show_in_rest' => true,
+					'annotations'  => array( 'destructive' => true ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Execute: approve-location.
+	 *
+	 * Publishes a pending wing_location post.
+	 *
+	 * @param array $input { post_id: int }.
+	 * @return array|\WP_Error
+	 */
+	public function execute_approve_location( array $input ) {
+		$post_id = absint( $input['post_id'] ?? 0 );
+		$post    = get_post( $post_id );
+
+		if ( ! $post || 'wing_location' !== $post->post_type ) {
+			return new \WP_Error(
+				'not_found',
+				__( 'Wing location not found.', 'wing-review-submit' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( 'pending' !== $post->post_status ) {
+			return new \WP_Error(
+				'not_pending',
+				__( 'Location is not in pending status.', 'wing-review-submit' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		wp_publish_post( $post_id );
+
+		return array(
+			'success' => true,
+			'post_id' => $post_id,
+			'title'   => get_the_title( $post_id ),
+			'url'     => get_permalink( $post_id ),
+		);
+	}
+
+	// ------------------------------------------------------------------
+	// cluckin-chuck/reject-location
+	// ------------------------------------------------------------------
+
+	private function register_reject_location(): void {
+		wp_register_ability(
+			'cluckin-chuck/reject-location',
+			array(
+				'label'               => __( 'Reject Location', 'wing-review-submit' ),
+				'description'         => __( 'Reject a pending wing location submission by trashing it.', 'wing-review-submit' ),
+				'category'            => 'cluckin-chuck',
+				'input_schema'        => array(
+					'type'       => 'object',
+					'required'   => array( 'post_id' ),
+					'properties' => array(
+						'post_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The pending wing_location post ID to reject.', 'wing-review-submit' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'success' => array( 'type' => 'boolean' ),
+						'post_id' => array( 'type' => 'integer' ),
+						'title'   => array( 'type' => 'string' ),
+					),
+				),
+				'execute_callback'    => array( $this, 'execute_reject_location' ),
+				'permission_callback' => function () {
+					return current_user_can( 'publish_posts' ) || ( defined( 'WP_CLI' ) && WP_CLI );
+				},
+				'meta'                => array(
+					'show_in_rest' => true,
+					'annotations'  => array( 'destructive' => true ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Execute: reject-location.
+	 *
+	 * Trashes a pending wing_location post.
+	 *
+	 * @param array $input { post_id: int }.
+	 * @return array|\WP_Error
+	 */
+	public function execute_reject_location( array $input ) {
+		$post_id = absint( $input['post_id'] ?? 0 );
+		$post    = get_post( $post_id );
+
+		if ( ! $post || 'wing_location' !== $post->post_type ) {
+			return new \WP_Error(
+				'not_found',
+				__( 'Wing location not found.', 'wing-review-submit' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( 'pending' !== $post->post_status ) {
+			return new \WP_Error(
+				'not_pending',
+				__( 'Location is not in pending status.', 'wing-review-submit' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$title  = get_the_title( $post_id );
+		$result = wp_trash_post( $post_id );
+
+		if ( ! $result ) {
+			return new \WP_Error(
+				'rejection_failed',
+				__( 'Failed to trash location.', 'wing-review-submit' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		return array(
+			'success' => true,
+			'post_id' => $post_id,
+			'title'   => $title,
 		);
 	}
 

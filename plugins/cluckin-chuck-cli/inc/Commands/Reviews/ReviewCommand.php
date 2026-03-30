@@ -3,7 +3,8 @@
  * Wing Review CLI Commands.
  *
  * Wraps cluckin-chuck/list-reviews, cluckin-chuck/approve-review,
- * cluckin-chuck/recalculate-stats, and cluckin-chuck/list-pending abilities.
+ * cluckin-chuck/reject-review, cluckin-chuck/recalculate-stats,
+ * and cluckin-chuck/list-pending abilities.
  *
  * @package CluckinChuck\CLI\Commands\Reviews
  */
@@ -112,6 +113,44 @@ class ReviewCommand {
 			$result['rating'],
 			$result['post_id'],
 			$result['review_count']
+		) );
+	}
+
+	/**
+	 * Reject a pending wing review.
+	 *
+	 * Trashes the pending review comment.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <comment_id>
+	 * : The pending review comment ID to reject.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp cluckinchuck reviews reject 15
+	 *
+	 * @when after_wp_load
+	 */
+	public function reject( $args, $assoc_args ) {
+		$this->ensure_abilities_api();
+
+		$ability = wp_get_ability( 'cluckin-chuck/reject-review' );
+		if ( ! $ability ) {
+			WP_CLI::error( 'Ability cluckin-chuck/reject-review is not registered. Ensure wing-review plugin is active.' );
+		}
+
+		$result = $ability->execute( array( 'comment_id' => intval( $args[0] ) ) );
+
+		if ( is_wp_error( $result ) ) {
+			WP_CLI::error( $result->get_error_message() );
+		}
+
+		WP_CLI::success( sprintf(
+			'Rejected review by %s on location %d (comment %d trashed).',
+			$result['reviewer'],
+			$result['post_id'],
+			$result['comment_id']
 		) );
 	}
 

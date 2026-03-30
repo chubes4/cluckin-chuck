@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.4] - 2026-03-30
+
+### Added
+- add reject-review, approve-location, reject-location across all surfaces
+
 ## [0.1.3] - 2026-03-30
 
 ### Changed

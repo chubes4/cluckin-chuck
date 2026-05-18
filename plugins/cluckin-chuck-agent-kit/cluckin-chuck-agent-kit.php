@@ -35,6 +35,29 @@ add_action( 'plugins_loaded', function () {
 } );
 
 // ------------------------------------------------------------------
+// Register 'agents' ability category for WP 6.9.x (WP 7.0+ has it natively).
+// Must fire on wp_abilities_api_categories_init, which runs before wp_abilities_api_init.
+// ------------------------------------------------------------------
+$register_agents_category = function () {
+	if ( ! function_exists( 'wp_register_ability_category' ) || wp_has_ability_category( 'agents' ) ) {
+		return;
+	}
+	wp_register_ability_category( 'agents', array(
+		'label'       => 'Agents',
+		'description' => 'Agent management abilities.',
+	) );
+};
+
+if ( doing_action( 'wp_abilities_api_categories_init' ) ) {
+	$register_agents_category();
+} elseif ( did_action( 'wp_abilities_api_categories_init' ) ) {
+	// Too late — categories can't be registered after the action.
+	// Fall back handled below by omitting category from abilities.
+} else {
+	add_action( 'wp_abilities_api_categories_init', $register_agents_category );
+}
+
+// ------------------------------------------------------------------
 // Agents API shims for frontend-agent-chat v0.8.0.
 //
 // FAC v0.8.0 expects `agents/list-accessible-agents`, `agents/can-access-agent`,
@@ -50,14 +73,6 @@ $register_agents_api_shims = function () {
 	// Only register shims if the real Agents API abilities don't exist.
 	if ( wp_get_ability( 'agents/list-accessible-agents' ) ) {
 		return;
-	}
-
-	// Register the 'agents' category if it doesn't exist (WP 7.0 registers it natively).
-	if ( function_exists( 'wp_register_ability_category' ) && ! wp_has_ability_category( 'agents' ) ) {
-		wp_register_ability_category( 'agents', array(
-			'label'       => 'Agents',
-			'description' => 'Agent management abilities.',
-		) );
 	}
 
 	wp_register_ability(

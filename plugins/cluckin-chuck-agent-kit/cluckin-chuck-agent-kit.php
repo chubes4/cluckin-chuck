@@ -34,6 +34,152 @@ add_action( 'plugins_loaded', function () {
 	new CluckinChuck\AgentKit\Tools\SubmitTools();
 } );
 
+// ------------------------------------------------------------------
+// Agents API shims for frontend-agent-chat v0.8.0.
+//
+// FAC v0.8.0 expects `agents/list-accessible-agents`, `agents/can-access-agent`,
+// and `agents/chat` abilities from the WP Agents API (WP 7.0+). On WP 6.9.x
+// these don't exist, so we register lightweight shims that delegate to
+// Data Machine's internal agent system.
+// ------------------------------------------------------------------
+add_action( 'wp_abilities_api_init', function () {
+	if ( ! function_exists( 'wp_register_ability' ) ) {
+		return;
+	}
+
+	// Only register shims if the real Agents API abilities don't exist.
+	if ( wp_get_ability( 'agents/list-accessible-agents' ) ) {
+		return;
+	}
+
+	wp_register_ability(
+		'agents/list-accessible-agents',
+		array(
+			'label'            => 'List Accessible Agents',
+			'description'      => 'Shim: lists agents the current user can access.',
+			'category'         => 'agents',
+			'input_schema'     => array(
+				'type'       => 'object',
+				'properties' => array(
+					'minimum_role' => array( 'type' => 'string', 'default' => 'viewer' ),
+				),
+			),
+			'output_schema'    => array(
+				'type'       => 'object',
+				'properties' => array(
+					'agents' => array( 'type' => 'array' ),
+				),
+			),
+			'execute_callback' => function ( array $input ) {
+				global $wpdb;
+				$agents = $wpdb->get_results(
+					"SELECT * FROM {$wpdb->prefix}datamachine_agents ORDER BY agent_slug ASC",
+					ARRAY_A
+				);
+
+				$result = array();
+				foreach ( $agents as $row ) {
+					$result[] = array(
+						'slug'        => $row['agent_slug'],
+						'agent_slug'  => $row['agent_slug'],
+						'label'       => $row['agent_slug'],
+						'agent_name'  => $row['agent_slug'],
+						'description' => '',
+						'meta'        => array(),
+					);
+				}
+
+				return array( 'agents' => $result );
+			},
+			'permission_callback' => '__return_true',
+			'meta'                => array( 'show_in_rest' => false ),
+		)
+	);
+
+	wp_register_ability(
+		'agents/can-access-agent',
+		array(
+			'label'            => 'Can Access Agent',
+			'description'      => 'Shim: checks if the current user can access an agent.',
+			'category'         => 'agents',
+			'input_schema'     => array(
+				'type'       => 'object',
+				'required'   => array( 'agent' ),
+				'properties' => array(
+					'agent'        => array( 'type' => 'string' ),
+					'minimum_role' => array( 'type' => 'string', 'default' => 'viewer' ),
+				),
+			),
+			'output_schema'    => array(
+				'type'       => 'object',
+				'properties' => array(
+					'allowed' => array( 'type' => 'boolean' ),
+				),
+			),
+			'execute_callback' => function ( array $input ) {
+				// On WP 6.9 without the full Agents API, allow all
+				// authenticated users and the configured agent slug.
+				$allowed = is_user_logged_in();
+				return array( 'allowed' => $allowed );
+			},
+			'permission_callback' => '__return_true',
+			'meta'                => array( 'show_in_rest' => false ),
+		)
+	);
+
+	wp_register_ability(
+		'agents/chat',
+		array(
+			'label'            => 'Chat with Agent',
+			'description'      => 'Shim: delegates to datamachine/send-message.',
+			'category'         => 'agents',
+			'input_schema'     => array(
+				'type'       => 'object',
+				'required'   => array( 'message' ),
+				'properties' => array(
+					'agent'          => array( 'type' => 'string' ),
+					'message'        => array( 'type' => 'string' ),
+					'session_id'     => array( 'type' => 'string' ),
+					'attachments'    => array( 'type' => 'array' ),
+					'client_context' => array( 'type' => 'object' ),
+				),
+			),
+			'output_schema'    => array( 'type' => 'object' ),
+			'execute_callback' => function ( array $input ) {
+				$send = wp_get_ability( 'datamachine/send-message' );
+				if ( ! $send ) {
+					return new \WP_Error( 'missing_ability', 'datamachine/send-message is not available.' );
+				}
+
+				// Resolve agent slug to agent_id.
+				$agent_slug = sanitize_title( $input['agent'] ?? '' );
+				$agent_id   = 0;
+				if ( '' !== $agent_slug ) {
+					global $wpdb;
+					$agent_id = (int) $wpdb->get_var(
+						$wpdb->prepare(
+							"SELECT id FROM {$wpdb->prefix}datamachine_agents WHERE agent_slug = %s LIMIT 1",
+							$agent_slug
+						)
+					);
+				}
+
+				return $send->execute( array(
+					'message'        => $input['message'] ?? '',
+					'session_id'     => $input['session_id'] ?? null,
+					'agent_id'       => $agent_id,
+					'attachments'    => $input['attachments'] ?? array(),
+					'client_context' => $input['client_context'] ?? array(),
+				) );
+			},
+			'permission_callback' => function () {
+				return is_user_logged_in() || current_user_can( 'read' );
+			},
+			'meta' => array( 'show_in_rest' => false ),
+		)
+	);
+} );
+
 // Configure the frontend chat widget.
 add_filter( 'frontend_agent_chat_config', function ( $config ) {
 	$config['agent_slug']  = 'cluckinchuck';

@@ -35,11 +35,35 @@ add_action( 'plugins_loaded', function () {
 } );
 
 // Configure the frontend chat widget.
-add_filter( 'data_machine_frontend_chat_config', function ( $config ) {
+add_filter( 'frontend_agent_chat_config', function ( $config ) {
 	$config['agent_slug']  = 'cluckinchuck';
 	$config['visibility']  = 'team';
 	$config['description'] = 'Your AI wing advisor. Ask about locations, submit reviews, or find the best wings near you.';
 	$config['enabled']     = true;
 
 	return $config;
+} );
+
+// Inject user authentication context into chat input so the AI knows
+// whether the current user is logged in and can skip asking for name/email.
+add_filter( 'frontend_agent_chat_chat_input', function ( $chat_input ) {
+	if ( ! is_array( $chat_input ) ) {
+		return $chat_input;
+	}
+
+	if ( ! isset( $chat_input['client_context'] ) || ! is_array( $chat_input['client_context'] ) ) {
+		$chat_input['client_context'] = array();
+	}
+
+	if ( is_user_logged_in() ) {
+		$user = wp_get_current_user();
+
+		$chat_input['client_context']['user_authenticated'] = true;
+		$chat_input['client_context']['user_display_name']  = $user->display_name;
+		$chat_input['client_context']['user_role']          = implode( ', ', $user->roles );
+	} else {
+		$chat_input['client_context']['user_authenticated'] = false;
+	}
+
+	return $chat_input;
 } );

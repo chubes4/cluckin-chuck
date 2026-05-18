@@ -52,6 +52,14 @@ $register_agents_api_shims = function () {
 		return;
 	}
 
+	// Register the 'agents' category if it doesn't exist (WP 7.0 registers it natively).
+	if ( function_exists( 'wp_register_ability_category' ) && ! wp_has_ability_category( 'agents' ) ) {
+		wp_register_ability_category( 'agents', array(
+			'label'       => 'Agents',
+			'description' => 'Agent management abilities.',
+		) );
+	}
+
 	wp_register_ability(
 		'agents/list-accessible-agents',
 		array(

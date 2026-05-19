@@ -183,10 +183,11 @@ class Wing_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'success' => array( 'type' => 'boolean' ),
-						'post_id' => array( 'type' => 'integer' ),
-						'updated' => array( 'type' => 'array' ),
-						'meta'    => array( 'type' => 'object' ),
+						'success'  => array( 'type' => 'boolean' ),
+						'post_id'  => array( 'type' => 'integer' ),
+						'updated'  => array( 'type' => 'array' ),
+						'geocoded' => array( 'type' => 'boolean' ),
+						'meta'     => array( 'type' => 'object' ),
 					),
 				),
 				'execute_callback'    => array( $this, 'execute_update_location' ),
@@ -241,13 +242,37 @@ class Wing_Abilities {
 			);
 		}
 
+		// Auto-geocode when the address changed and explicit coordinates weren't provided.
+		$geocoded = false;
+		if (
+			isset( $filtered['wing_address'] )
+			&& ! isset( $filtered['wing_latitude'] )
+			&& ! isset( $filtered['wing_longitude'] )
+			&& function_exists( '\\CluckinChuck\\geocode_address' )
+		) {
+			$new_address    = (string) $filtered['wing_address'];
+			$prev_geocoded  = (string) get_post_meta( $post_id, '_wing_geocoded_address', true );
+
+			if ( '' !== $new_address && $new_address !== $prev_geocoded ) {
+				$coords = geocode_address( $new_address );
+
+				if ( is_array( $coords ) && isset( $coords['lat'], $coords['lng'] ) ) {
+					$filtered['wing_latitude']  = $coords['lat'];
+					$filtered['wing_longitude'] = $coords['lng'];
+					update_post_meta( $post_id, '_wing_geocoded_address', $new_address );
+					$geocoded = true;
+				}
+			}
+		}
+
 		Wing_Location_Meta::update_location_meta( $post_id, $filtered );
 
 		return array(
-			'success' => true,
-			'post_id' => $post_id,
-			'updated' => array_keys( $filtered ),
-			'meta'    => Wing_Location_Meta::get_location_meta( $post_id ),
+			'success'  => true,
+			'post_id'  => $post_id,
+			'updated'  => array_keys( $filtered ),
+			'geocoded' => $geocoded,
+			'meta'     => Wing_Location_Meta::get_location_meta( $post_id ),
 		);
 	}
 

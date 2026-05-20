@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - 2026-05-20
+
+### Added
+- feat(agent-kit): introduce cluckin-chuck mode and fix tool registration
+
+### Fixed
+- fix(agent-kit): convert wing tool params to proper JSON Schema
+- fix(agent-kit): restrict cluckin-chuck mode tool surface to wing allowlist
+- register agents category on wp_abilities_api_categories_init
+- register agents ability category before shim abilities
+- register Agents API shims for frontend-agent-chat v0.8.0
+- inject user auth context into frontend chat AI prompt
+
 ## [0.2.2] - 2026-05-04
 
 ### Fixed

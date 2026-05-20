@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1] - 2026-05-04
+
+### Fixed
+- The cluckin-chuck mode now restricts the resolved tool surface to the
+  wing-assistant allowlist via the `datamachine_resolved_tools` filter.
+  Without this, including `'chat'` as the execution surface mode let every
+  admin chat tool (GitHub, Reddit, social publishers, pipeline mgmt, etc.)
+  through to the public frontend chat — 128 tools instead of the intended
+  13. The allowlist lives in `CluckinChuckMode::allowed_tools()` and is
+  the canonical source of truth for "what tools does Chuck have access
+  to in the public chat surface."
+
 ## [0.2.0] - 2026-05-04
 
 ### Added

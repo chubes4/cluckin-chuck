@@ -62,6 +62,20 @@ class CluckinChuckMode {
 			10,
 			2
 		);
+
+		// Restrict the tool surface whenever this mode is active. We need
+		// 'chat' in the agent_modes array as the execution surface (without
+		// it, ToolPolicyResolver treats the call as pipeline mode), but
+		// 'chat' on its own would let every admin chat tool through.
+		//
+		// This filter runs AFTER tool gathering and AFTER per-agent tool
+		// policy, so it's the last word on what reaches the model.
+		add_filter(
+			'datamachine_resolved_tools',
+			array( self::class, 'restrict_tools_to_wing_surface' ),
+			10,
+			3
+		);
 	}
 
 	/**
@@ -188,6 +202,69 @@ MD;
 	 *
 	 * @return void
 	 */
+	/**
+	 * Allowlisted tools when the cluckin-chuck mode is active.
+	 *
+	 * Defines the canonical wing-assistant tool surface. The mode enforces
+	 * this rather than leaving it to per-agent tool_policy on the DB row.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function allowed_tools(): array {
+		return array(
+			// Discovery.
+			'list_wing_locations',
+			'get_wing_location',
+			'list_wing_reviews',
+
+			// Geocoding (used before location submission).
+			'geocode_address',
+
+			// Public submissions.
+			'submit_wing_review',
+			'submit_wing_location',
+
+			// Admin moderation. PermissionHelper / per-ability permission
+			// callbacks already gate the actual execution by capability —
+			// listing these in the surface is safe for public sessions
+			// because the public user just can't successfully call them.
+			'approve_wing_review',
+			'reject_wing_review',
+			'approve_wing_location',
+			'reject_wing_location',
+			'update_wing_location',
+			'recalculate_wing_stats',
+			'list_pending_submissions',
+		);
+	}
+
+	/**
+	 * Filter the resolved tools array down to the wing surface when the
+	 * cluckin-chuck mode is active.
+	 *
+	 * Hooked into datamachine_resolved_tools (the last filter point in
+	 * ToolPolicyResolver::resolve). When this mode is active, anything not
+	 * on the allowlist is removed — including the broad set of admin chat
+	 * tools that 'chat' mode would otherwise let through.
+	 *
+	 * If the mode is not in the active set, this is a no-op so other DM
+	 * surfaces are unaffected.
+	 *
+	 * @param array        $tools  Resolved tools keyed by tool name.
+	 * @param string|array $mode   Active mode(s) — string if one, array if many.
+	 * @param array        $args   Full resolver args.
+	 * @return array Filtered tools.
+	 */
+	public static function restrict_tools_to_wing_surface( array $tools, $mode, array $args ): array {
+		$modes = is_array( $mode ) ? $mode : array( $mode );
+		if ( ! in_array( self::SLUG, $modes, true ) ) {
+			return $tools;
+		}
+
+		$allowed = array_flip( self::allowed_tools() );
+		return array_intersect_key( $tools, $allowed );
+	}
+
 	/**
 	 * Migrate the legacy cluckinchuck agent_config to the mode-based shape.
 	 *

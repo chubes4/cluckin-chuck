@@ -25,14 +25,19 @@ class SubmitTools {
 	}
 
 	public function register_tools( array $tools ): array {
+		// See LocationTools::register_tools for the 'modes' vs 'contexts'
+		// rationale. Tagging both modes keeps these tools available to
+		// the cluckin-chuck public chat AND the chat execution surface.
+		$modes = array( 'cluckin-chuck', 'chat' );
+
 		$tools['submit_wing_review'] = array(
 			'_callable' => array( $this, 'get_submit_review_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['submit_wing_location'] = array(
 			'_callable' => array( $this, 'get_submit_location_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		return $tools;

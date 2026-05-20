@@ -3,7 +3,7 @@
  * Plugin Name: Cluckin' Chuck Agent Kit
  * Plugin URI: https://cluckinchuck.saraichinwag.com
  * Description: Chat tools and agent configuration for the Cluckin' Chuck AI assistant. Bridges abilities to Data Machine's chat system.
- * Version: 0.1.2
+ * Version: 0.2.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.1.2' );
+define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.2.0' );
 define( 'CLUCKIN_CHUCK_AGENT_KIT_PATH', plugin_dir_path( __FILE__ ) );
 
 // Load tool classes.
@@ -27,12 +27,37 @@ require_once CLUCKIN_CHUCK_AGENT_KIT_PATH . 'inc/Tools/LocationTools.php';
 require_once CLUCKIN_CHUCK_AGENT_KIT_PATH . 'inc/Tools/ReviewTools.php';
 require_once CLUCKIN_CHUCK_AGENT_KIT_PATH . 'inc/Tools/SubmitTools.php';
 
+// Load mode definition.
+require_once CLUCKIN_CHUCK_AGENT_KIT_PATH . 'inc/Mode/CluckinChuckMode.php';
+
 // Boot tool registration.
 add_action( 'plugins_loaded', function () {
 	new CluckinChuck\AgentKit\Tools\LocationTools();
 	new CluckinChuck\AgentKit\Tools\ReviewTools();
 	new CluckinChuck\AgentKit\Tools\SubmitTools();
 } );
+
+// Boot the cluckin-chuck Data Machine mode (registers with AgentModeRegistry +
+// hooks the directive filter for the wing-biz system prompt overlay).
+\CluckinChuck\AgentKit\Mode\CluckinChuckMode::boot();
+
+// Seed mode_models['cluckin-chuck'] = gpt-5.4-mini on activation. Idempotent
+// — only writes when the site has no existing override.
+register_activation_hook( __FILE__, array( '\CluckinChuck\AgentKit\Mode\CluckinChuckMode', 'seed_default_model' ) );
+
+// Also seed on version upgrade. Compare the stored version to the live
+// constant — if they differ (or no version stored yet), run the seeder
+// + agent-config migration and store the new version. This makes the
+// 0.1.x → 0.2.0 deploy self-installing on every environment.
+add_action( 'init', function () {
+	$stored = get_option( 'cluckin_chuck_agent_kit_version', '' );
+	if ( CLUCKIN_CHUCK_AGENT_KIT_VERSION === $stored ) {
+		return;
+	}
+	\CluckinChuck\AgentKit\Mode\CluckinChuckMode::seed_default_model();
+	\CluckinChuck\AgentKit\Mode\CluckinChuckMode::migrate_agent_config();
+	update_option( 'cluckin_chuck_agent_kit_version', CLUCKIN_CHUCK_AGENT_KIT_VERSION );
+}, 20 );
 
 // ------------------------------------------------------------------
 // Register 'agents' ability category for WP 6.9.x (WP 7.0+ has it natively).
@@ -223,8 +248,18 @@ add_filter( 'frontend_agent_chat_config', function ( $config ) {
 	return $config;
 } );
 
-// Inject user authentication context into chat input so the AI knows
-// whether the current user is logged in and can skip asking for name/email.
+// Inject runtime context into chat input. Two responsibilities:
+//
+//   1. agent_modes — opt the frontend chat into the cluckin-chuck mode.
+//      DM reads client_context.agent_modes in AgentsChatHandler::resolveModes
+//      and uses them to (a) pick the per-mode model via mode_models[],
+//      (b) inject the cluckin-chuck system directive, and (c) gather
+//      tools whose 'modes' includes 'cluckin-chuck'. The 'chat' mode is
+//      kept as the execution surface — without it, ToolPolicyResolver
+//      treats the call as pipeline mode.
+//
+//   2. user identity — tell the agent whether the current user is logged
+//      in so it can skip asking for name/email during review submission.
 add_filter( 'frontend_agent_chat_chat_input', function ( $chat_input ) {
 	if ( ! is_array( $chat_input ) ) {
 		return $chat_input;
@@ -233,6 +268,11 @@ add_filter( 'frontend_agent_chat_chat_input', function ( $chat_input ) {
 	if ( ! isset( $chat_input['client_context'] ) || ! is_array( $chat_input['client_context'] ) ) {
 		$chat_input['client_context'] = array();
 	}
+
+	$chat_input['client_context']['agent_modes'] = array(
+		\CluckinChuck\AgentKit\Mode\CluckinChuckMode::SLUG,
+		'chat',
+	);
 
 	if ( is_user_logged_in() ) {
 		$user = wp_get_current_user();

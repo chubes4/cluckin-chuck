@@ -25,29 +25,34 @@ class ReviewTools {
 	}
 
 	public function register_tools( array $tools ): array {
+		// See LocationTools::register_tools for the 'modes' vs 'contexts'
+		// rationale. Tagging both modes keeps these tools available to
+		// the cluckin-chuck public chat AND the chat execution surface.
+		$modes = array( 'cluckin-chuck', 'chat' );
+
 		$tools['list_wing_reviews'] = array(
 			'_callable' => array( $this, 'get_list_reviews_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['approve_wing_review'] = array(
 			'_callable' => array( $this, 'get_approve_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['reject_wing_review'] = array(
 			'_callable' => array( $this, 'get_reject_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['recalculate_wing_stats'] = array(
 			'_callable' => array( $this, 'get_recalculate_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['list_pending_submissions'] = array(
 			'_callable' => array( $this, 'get_pending_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		return $tools;

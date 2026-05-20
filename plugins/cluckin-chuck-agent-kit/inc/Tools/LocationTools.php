@@ -26,34 +26,44 @@ class LocationTools {
 	}
 
 	public function register_tools( array $tools ): array {
+		// Tools are tagged with both modes so they are available whether the
+		// caller passes ['cluckin-chuck', 'chat'] (frontend public chat) or
+		// just ['chat'] (admin chat surface). DM's tool resolver does a mode
+		// intersect, so listing both is the broadest reachable surface.
+		//
+		// NOTE: the field is 'modes', not 'contexts'. Earlier versions used
+		// 'contexts' which DM's resolver silently ignores — meaning none of
+		// these tools were reaching the frontend chat. Fixed in 0.2.0.
+		$modes = array( 'cluckin-chuck', 'chat' );
+
 		$tools['list_wing_locations'] = array(
 			'_callable' => array( $this, 'get_list_locations_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['get_wing_location'] = array(
 			'_callable' => array( $this, 'get_get_location_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['update_wing_location'] = array(
 			'_callable' => array( $this, 'get_update_location_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['geocode_address'] = array(
 			'_callable' => array( $this, 'get_geocode_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['approve_wing_location'] = array(
 			'_callable' => array( $this, 'get_approve_location_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		$tools['reject_wing_location'] = array(
 			'_callable' => array( $this, 'get_reject_location_def' ),
-			'contexts'  => array( 'chat' ),
+			'modes'     => $modes,
 		);
 
 		return $tools;

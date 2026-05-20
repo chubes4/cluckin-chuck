@@ -37,36 +37,54 @@ class LocationTools {
 		$modes = array( 'cluckin-chuck', 'chat' );
 
 		$tools['list_wing_locations'] = array(
-			'_callable' => array( $this, 'get_list_locations_def' ),
+			'_callable' => $this->schema_normalized( 'get_list_locations_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['get_wing_location'] = array(
-			'_callable' => array( $this, 'get_get_location_def' ),
+			'_callable' => $this->schema_normalized( 'get_get_location_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['update_wing_location'] = array(
-			'_callable' => array( $this, 'get_update_location_def' ),
+			'_callable' => $this->schema_normalized( 'get_update_location_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['geocode_address'] = array(
-			'_callable' => array( $this, 'get_geocode_def' ),
+			'_callable' => $this->schema_normalized( 'get_geocode_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['approve_wing_location'] = array(
-			'_callable' => array( $this, 'get_approve_location_def' ),
+			'_callable' => $this->schema_normalized( 'get_approve_location_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['reject_wing_location'] = array(
-			'_callable' => array( $this, 'get_reject_location_def' ),
+			'_callable' => $this->schema_normalized( 'get_reject_location_def' ),
 			'modes'     => $modes,
 		);
 
 		return $tools;
+	}
+
+	/**
+	 * Wrap a def method so its `parameters` field is converted from the
+	 * bare-map format to proper JSON Schema before DM serializes it for
+	 * the LLM provider.
+	 *
+	 * @param string $method Method name on $this returning the def.
+	 * @return callable
+	 */
+	private function schema_normalized( string $method ): callable {
+		return function () use ( $method ) {
+			$def = $this->$method();
+			if ( isset( $def['parameters'] ) && is_array( $def['parameters'] ) ) {
+				$def['parameters'] = SchemaHelper::to_json_schema( $def['parameters'] );
+			}
+			return $def;
+		};
 	}
 
 	// ------------------------------------------------------------------

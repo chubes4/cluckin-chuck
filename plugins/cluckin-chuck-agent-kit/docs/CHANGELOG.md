@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.2] - 2026-05-04
+
+### Fixed
+- Wing tool `parameters` were declared in a bare keyed-map form like
+  `array( 'post_id' => array( 'type' => 'integer', 'required' => true, ... ) )`.
+  Data Machine's `RequestBuilder::normalizeToolSchema()` expects JSON Schema
+  (`{ type: 'object', properties: {...}, required: [...] }`) and passes
+  anything else through unchanged. Older/looser OpenAI models tolerated the
+  malformed schema, but stricter models like `gpt-5.4-mini` reject it with
+  a 400 "invalid schema for function" error — which manifested as the
+  frontend chat failing on first tool-call attempt.
+- Added `SchemaHelper::to_json_schema()` that converts the bare-map form
+  to a proper JSON Schema object, stripping per-parameter `required` flags
+  into the top-level `required` array. Each Tools class now wraps its def
+  methods via `schema_normalized()` so the conversion runs once at tool
+  resolution time. Per-def method bodies stay readable; the wire format
+  going to the LLM provider is now correct.
+
 ## [0.2.1] - 2026-05-04
 
 ### Fixed

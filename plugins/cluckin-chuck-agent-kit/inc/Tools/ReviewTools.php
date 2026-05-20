@@ -31,31 +31,49 @@ class ReviewTools {
 		$modes = array( 'cluckin-chuck', 'chat' );
 
 		$tools['list_wing_reviews'] = array(
-			'_callable' => array( $this, 'get_list_reviews_def' ),
+			'_callable' => $this->schema_normalized( 'get_list_reviews_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['approve_wing_review'] = array(
-			'_callable' => array( $this, 'get_approve_def' ),
+			'_callable' => $this->schema_normalized( 'get_approve_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['reject_wing_review'] = array(
-			'_callable' => array( $this, 'get_reject_def' ),
+			'_callable' => $this->schema_normalized( 'get_reject_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['recalculate_wing_stats'] = array(
-			'_callable' => array( $this, 'get_recalculate_def' ),
+			'_callable' => $this->schema_normalized( 'get_recalculate_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['list_pending_submissions'] = array(
-			'_callable' => array( $this, 'get_pending_def' ),
+			'_callable' => $this->schema_normalized( 'get_pending_def' ),
 			'modes'     => $modes,
 		);
 
 		return $tools;
+	}
+
+	/**
+	 * Wrap a def method so its `parameters` field is normalized to JSON
+	 * Schema before DM serializes it for the LLM provider. See
+	 * LocationTools::schema_normalized() for the rationale.
+	 *
+	 * @param string $method Method name on $this returning the def.
+	 * @return callable
+	 */
+	private function schema_normalized( string $method ): callable {
+		return function () use ( $method ) {
+			$def = $this->$method();
+			if ( isset( $def['parameters'] ) && is_array( $def['parameters'] ) ) {
+				$def['parameters'] = SchemaHelper::to_json_schema( $def['parameters'] );
+			}
+			return $def;
+		};
 	}
 
 	// ------------------------------------------------------------------

@@ -31,16 +31,34 @@ class SubmitTools {
 		$modes = array( 'cluckin-chuck', 'chat' );
 
 		$tools['submit_wing_review'] = array(
-			'_callable' => array( $this, 'get_submit_review_def' ),
+			'_callable' => $this->schema_normalized( 'get_submit_review_def' ),
 			'modes'     => $modes,
 		);
 
 		$tools['submit_wing_location'] = array(
-			'_callable' => array( $this, 'get_submit_location_def' ),
+			'_callable' => $this->schema_normalized( 'get_submit_location_def' ),
 			'modes'     => $modes,
 		);
 
 		return $tools;
+	}
+
+	/**
+	 * Wrap a def method so its `parameters` field is normalized to JSON
+	 * Schema before DM serializes it for the LLM provider. See
+	 * LocationTools::schema_normalized() for the rationale.
+	 *
+	 * @param string $method Method name on $this returning the def.
+	 * @return callable
+	 */
+	private function schema_normalized( string $method ): callable {
+		return function () use ( $method ) {
+			$def = $this->$method();
+			if ( isset( $def['parameters'] ) && is_array( $def['parameters'] ) ) {
+				$def['parameters'] = SchemaHelper::to_json_schema( $def['parameters'] );
+			}
+			return $def;
+		};
 	}
 
 	// ------------------------------------------------------------------

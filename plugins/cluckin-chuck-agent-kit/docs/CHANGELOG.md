@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1] - 2026-05-21
+
+### Added
+- set fab_label to "Chat with Chuck" and fab_icon to 🍗 via frontend_agent_chat_config filter (requires frontend-agent-chat >= 0.8.1)
+
+### Removed
+- obsolete visibility=team config key (frontend-agent-chat ignores it; access is governed by wp_datamachine_agent_access grants)
+
 ## [0.3.0] - 2026-05-20
 
 ### Added

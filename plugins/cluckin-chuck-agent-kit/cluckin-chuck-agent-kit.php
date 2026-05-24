@@ -3,7 +3,7 @@
  * Plugin Name: Cluckin' Chuck Agent Kit
  * Plugin URI: https://cluckinchuck.saraichinwag.com
  * Description: Chat tools and agent configuration for the Cluckin' Chuck AI assistant. Bridges abilities to Data Machine's chat system.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.3.0' );
+define( 'CLUCKIN_CHUCK_AGENT_KIT_VERSION', '0.3.1' );
 define( 'CLUCKIN_CHUCK_AGENT_KIT_PATH', plugin_dir_path( __FILE__ ) );
 
 // Load tool classes.
@@ -242,9 +242,10 @@ if ( doing_action( 'wp_abilities_api_init' ) ) {
 // Configure the frontend chat widget.
 add_filter( 'frontend_agent_chat_config', function ( $config ) {
 	$config['agent_slug']  = 'cluckinchuck';
-	$config['visibility']  = 'team';
 	$config['description'] = 'Your AI wing advisor. Ask about locations, submit reviews, or find the best wings near you.';
 	$config['enabled']     = true;
+	$config['fab_label']   = 'Chat with Chuck';
+	$config['fab_icon']    = '🍗';
 
 	return $config;
 } );

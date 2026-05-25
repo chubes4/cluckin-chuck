@@ -139,12 +139,11 @@ class Submit_Abilities {
 						),
 					'reviewer_name'     => array(
 						'type'        => 'string',
-						'description' => __( 'Reviewer\'s name. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+						'description' => __( 'Reviewer\'s display name. Optional for logged-in users — auto-filled from account when omitted or empty. Required for anonymous submissions through the form block.', 'wing-review-submit' ),
 					),
 					'reviewer_email'    => array(
 						'type'        => 'string',
-						'format'      => 'email',
-						'description' => __( 'Reviewer\'s email. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+						'description' => __( 'Reviewer\'s email address. Optional for logged-in users — auto-filled from account when omitted or empty. Required for anonymous submissions through the form block. Email format is validated post-autofill inside execute_callback so empty values don\'t block logged-in submissions.', 'wing-review-submit' ),
 					),
 						'rating'            => array(
 							'type'        => 'integer',
@@ -230,7 +229,12 @@ class Submit_Abilities {
 			'total_price'       => floatval( $input['total_price'] ?? 0 ),
 		);
 
-		// Auto-fill reviewer identity from the logged-in user.
+		// Auto-fill reviewer identity from the logged-in user. The ability's
+		// input_schema deliberately does NOT enforce format=email or require
+		// these fields, because the chat agent never passes them — it doesn't
+		// even see them in its tool surface (see cluckin-chuck-agent-kit's
+		// SubmitTools::get_submit_review_def). Validation runs below, after
+		// the autofill has had a chance to populate values from wp_get_current_user().
 		$current_user = wp_get_current_user();
 		if ( $current_user->ID ) {
 			if ( empty( $data['reviewer_name'] ) ) {
@@ -245,6 +249,14 @@ class Submit_Abilities {
 			return new \WP_Error(
 				'missing_fields',
 				__( 'Name, email, and review text are required. Log in or provide them manually.', 'wing-review-submit' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( ! is_email( $data['reviewer_email'] ) ) {
+			return new \WP_Error(
+				'invalid_email',
+				__( 'Reviewer email is not a valid email address.', 'wing-review-submit' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -320,12 +332,11 @@ class Submit_Abilities {
 						),
 					'reviewer_name'     => array(
 						'type'        => 'string',
-						'description' => __( 'Reviewer\'s name. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+						'description' => __( 'Reviewer\'s display name. Optional for logged-in users — auto-filled from account when omitted or empty. Required for anonymous submissions through the form block.', 'wing-review-submit' ),
 					),
 					'reviewer_email'    => array(
 						'type'        => 'string',
-						'format'      => 'email',
-						'description' => __( 'Reviewer\'s email. Optional for logged-in users — auto-filled from account.', 'wing-review-submit' ),
+						'description' => __( 'Reviewer\'s email address. Optional for logged-in users — auto-filled from account when omitted or empty. Required for anonymous submissions through the form block. Email format is validated post-autofill inside execute_callback so empty values don\'t block logged-in submissions.', 'wing-review-submit' ),
 					),
 						'rating'            => array(
 							'type'    => 'integer',
@@ -405,7 +416,12 @@ class Submit_Abilities {
 			: 0;
 		$data['ppw'] = $ppw;
 
-		// Auto-fill reviewer identity from the logged-in user.
+		// Auto-fill reviewer identity from the logged-in user. The ability's
+		// input_schema deliberately does NOT enforce format=email or require
+		// these fields, because the chat agent never passes them — it doesn't
+		// even see them in its tool surface (see cluckin-chuck-agent-kit's
+		// SubmitTools::get_submit_location_def). Validation runs below, after
+		// the autofill has had a chance to populate values from wp_get_current_user().
 		$current_user = wp_get_current_user();
 		if ( $current_user->ID ) {
 			if ( empty( $data['reviewer_name'] ) ) {
@@ -427,6 +443,14 @@ class Submit_Abilities {
 					array( 'status' => 400 )
 				);
 			}
+		}
+
+		if ( ! is_email( $data['reviewer_email'] ) ) {
+			return new \WP_Error(
+				'invalid_email',
+				__( 'Reviewer email is not a valid email address.', 'wing-review-submit' ),
+				array( 'status' => 400 )
+			);
 		}
 
 		if ( $data['rating'] < 1 || $data['rating'] > 5 ) {

@@ -71,8 +71,7 @@ class SubmitTools {
 			'method'       => 'handle_tool_call',
 			'description'  => 'Submit a wing review for an existing location. Creates a pending review awaiting moderation. '
 				. 'Auto-approved when submitted by a user with moderation privileges. '
-				. 'For LOGGED-IN users: do NOT ask for name or email — omit reviewer_name and reviewer_email and the system auto-fills from their account. '
-				. 'For anonymous/public users: ask for name and email. '
+				. 'Reviewer identity is auto-filled by the system from the logged-in user account — do NOT ask the user for their name or email. '
 				. 'Extract: overall rating (1-5), review text, and optionally sauce rating, crispiness rating, number of wings, and total price. '
 				. 'Always confirm the extracted data with the user before submitting. '
 				. 'You must first use list_wing_locations to find the location\'s post_id.',
@@ -83,16 +82,6 @@ class SubmitTools {
 					'type'        => 'integer',
 					'required'    => true,
 					'description' => 'The wing_location post ID to submit a review for.',
-				),
-				'reviewer_name' => array(
-					'type'        => 'string',
-					'required'    => false,
-					'description' => 'Reviewer\'s display name. OMIT for logged-in users — auto-filled from their account.',
-				),
-				'reviewer_email' => array(
-					'type'        => 'string',
-					'required'    => false,
-					'description' => 'Reviewer\'s email address. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'rating' => array(
 					'type'        => 'integer',
@@ -134,8 +123,7 @@ class SubmitTools {
 			'method'       => 'handle_tool_call',
 			'description'  => 'Submit a brand new wing location with an initial review. Creates a pending location awaiting admin approval. '
 				. 'Auto-published when submitted by a user with publish privileges. '
-				. 'For LOGGED-IN users: do NOT ask for name or email — omit reviewer_name and reviewer_email and the system auto-fills from their account. '
-				. 'For anonymous/public users: ask for name and email. '
+				. 'Reviewer identity is auto-filled by the system from the logged-in user account — do NOT ask the user for their name or email. '
 				. 'First use list_wing_locations to confirm it doesn\'t already exist, then use geocode_address to get coordinates. '
 				. 'Extract location name, address, and review details from the conversation. '
 				. 'Always confirm the extracted data with the user before submitting.',
@@ -161,16 +149,6 @@ class SubmitTools {
 					'type'        => 'number',
 					'required'    => true,
 					'description' => 'Longitude from geocode_address tool.',
-				),
-				'reviewer_name' => array(
-					'type'        => 'string',
-					'required'    => false,
-					'description' => 'Reviewer\'s display name. OMIT for logged-in users — auto-filled from their account.',
-				),
-				'reviewer_email' => array(
-					'type'        => 'string',
-					'required'    => false,
-					'description' => 'Reviewer\'s email address. OMIT for logged-in users — auto-filled from their account.',
 				),
 				'rating' => array(
 					'type'        => 'integer',

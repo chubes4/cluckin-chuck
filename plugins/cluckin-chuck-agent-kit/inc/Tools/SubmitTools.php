@@ -40,6 +40,11 @@ class SubmitTools {
 			'modes'     => $modes,
 		);
 
+		$tools['attach_wing_location_image'] = array(
+			'_callable' => $this->schema_normalized( 'get_attach_location_image_def' ),
+			'modes'     => $modes,
+		);
+
 		return $tools;
 	}
 
@@ -189,6 +194,32 @@ class SubmitTools {
 					'type'        => 'number',
 					'required'    => false,
 					'description' => 'Total price paid in dollars.',
+				),
+			),
+		);
+	}
+
+	public function get_attach_location_image_def(): array {
+		return array(
+			'class'        => self::class,
+			'method'       => 'handle_tool_call',
+			'description'  => 'Attach an uploaded image to a wing location as its featured image. '
+				. 'Use this when the user uploads a photo in chat and references a specific location. '
+				. 'IMPORTANT: chat-uploaded images are already at a public WordPress URL — do NOT ask the user to re-upload to Imgur or any external host. '
+				. 'Find the media_id from the most recent user message that has an image: it is in the message metadata under attachments[].media_id. '
+				. 'Find the post_id by calling list_wing_locations or get_wing_location for the referenced restaurant.',
+			'ability'      => 'cluckin-chuck/attach-location-image',
+			'access_level' => 'public',
+			'parameters'   => array(
+				'post_id'  => array(
+					'type'        => 'integer',
+					'required'    => true,
+					'description' => 'The wing_location post ID to attach the image to.',
+				),
+				'media_id' => array(
+					'type'        => 'integer',
+					'required'    => true,
+					'description' => 'The WordPress media library attachment ID (from a prior chat image upload). Available in message metadata.attachments[].media_id.',
 				),
 			),
 		);

@@ -57,6 +57,7 @@ class Submit_Abilities {
 		$register = function () {
 			$this->register_submit_review();
 			$this->register_submit_location();
+			$this->register_attach_location_image();
 			$this->register_approve_location();
 			$this->register_reject_location();
 			$this->register_list_pending();
@@ -608,6 +609,129 @@ class Submit_Abilities {
 			'success'        => true,
 			'post_id'        => $post_id,
 			'auto_published' => $auto_published,
+		);
+	}
+
+	// ------------------------------------------------------------------
+	// cluckin-chuck/attach-location-image
+	// ------------------------------------------------------------------
+
+	private function register_attach_location_image(): void {
+		wp_register_ability(
+			'cluckin-chuck/attach-location-image',
+			array(
+				'label'               => __( 'Attach Location Image', 'wing-review-submit' ),
+				'description'         => __( 'Attach an uploaded media library image to a wing_location as its featured image. Pass the post_id and the media library attachment_id (e.g. from a chat image upload).', 'wing-review-submit' ),
+				'category'            => 'cluckin-chuck',
+				'input_schema'        => array(
+					'type'       => 'object',
+					'required'   => array( 'post_id', 'media_id' ),
+					'properties' => array(
+						'post_id'  => array(
+							'type'        => 'integer',
+							'description' => __( 'The wing_location post ID to attach the image to.', 'wing-review-submit' ),
+						),
+						'media_id' => array(
+							'type'        => 'integer',
+							'description' => __( 'The WordPress media library attachment ID to set as the featured image. Available on prior chat user messages via metadata.attachments[].media_id.', 'wing-review-submit' ),
+						),
+					),
+				),
+				'output_schema'       => array(
+					'type'       => 'object',
+					'properties' => array(
+						'success'    => array( 'type' => 'boolean' ),
+						'post_id'    => array( 'type' => 'integer' ),
+						'media_id'   => array( 'type' => 'integer' ),
+						'image_url'  => array( 'type' => 'string' ),
+						'post_title' => array( 'type' => 'string' ),
+					),
+				),
+				'execute_callback'    => array( $this, 'execute_attach_location_image' ),
+				'permission_callback' => function () {
+					// Only users who can edit the wing_location post type. The
+					// per-post check happens inside the callback because we
+					// don't have the post_id yet at this layer.
+					$cpt = get_post_type_object( 'wing_location' );
+					$cap = $cpt && isset( $cpt->cap->edit_posts ) ? $cpt->cap->edit_posts : 'edit_posts';
+					return current_user_can( $cap );
+				},
+				'meta'                => array(
+					'show_in_rest' => true,
+				),
+			)
+		);
+	}
+
+	/**
+	 * Execute: attach-location-image.
+	 *
+	 * Sets a media library attachment as the wing_location's featured image.
+	 *
+	 * @param array $input { post_id: int, media_id: int }.
+	 * @return array|\WP_Error
+	 */
+	public function execute_attach_location_image( array $input ) {
+		$post_id  = absint( $input['post_id'] ?? 0 );
+		$media_id = absint( $input['media_id'] ?? 0 );
+
+		if ( $post_id <= 0 || $media_id <= 0 ) {
+			return new \WP_Error(
+				'missing_field',
+				__( 'Both post_id and media_id are required.', 'wing-review-submit' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post || 'wing_location' !== $post->post_type ) {
+			return new \WP_Error(
+				'not_found',
+				__( 'Wing location not found.', 'wing-review-submit' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$attachment = get_post( $media_id );
+		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
+			return new \WP_Error(
+				'attachment_not_found',
+				__( 'Media library attachment not found.', 'wing-review-submit' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$mime = (string) get_post_mime_type( $media_id );
+		if ( 0 !== strpos( $mime, 'image/' ) ) {
+			return new \WP_Error(
+				'invalid_attachment_type',
+				sprintf(
+					/* translators: %s: actual MIME type */
+					__( 'Attachment must be an image. Got: %s', 'wing-review-submit' ),
+					$mime
+				),
+				array( 'status' => 400 )
+			);
+		}
+
+		// Per-post capability check — couldn't run in permission_callback
+		// because post_id isn't available there.
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new \WP_Error(
+				'forbidden',
+				__( 'You do not have permission to attach images to this location.', 'wing-review-submit' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		set_post_thumbnail( $post_id, $media_id );
+
+		return array(
+			'success'    => true,
+			'post_id'    => $post_id,
+			'media_id'   => $media_id,
+			'image_url'  => (string) wp_get_attachment_url( $media_id ),
+			'post_title' => get_the_title( $post_id ),
 		);
 	}
 

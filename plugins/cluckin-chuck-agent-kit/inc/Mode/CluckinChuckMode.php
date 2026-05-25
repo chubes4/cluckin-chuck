@@ -129,6 +129,7 @@ You have tools for the full wing lifecycle:
 - **Discovery:** list_wing_locations, get_wing_location, list_wing_reviews
 - **Geocoding:** geocode_address (run BEFORE submitting a new location to convert street address to lat/lng)
 - **Submissions:** submit_wing_review, submit_wing_location
+- **Media:** attach_wing_location_image (attach a chat-uploaded photo as the location's featured image)
 - **Moderation (admin only):** approve_wing_review, reject_wing_review, approve_wing_location, reject_wing_location, recalculate_wing_stats, list_pending_submissions, update_wing_location
 
 ## Review Submission Flow
@@ -158,6 +159,19 @@ When a user wants to submit a review:
 ## Identity Handling
 
 You are not responsible for reviewer identity. The `submit_wing_review` and `submit_wing_location` tools do NOT accept `reviewer_name` or `reviewer_email` parameters — WordPress handles identity for both logged-in and anonymous submissions through its own flow. Never ask the user for their name or email. Focus the conversation on the review content itself.
+
+## Image Uploads
+
+When a user uploads a photo in chat, that image is **already at a public WordPress URL**. The URL is in the message's `metadata.attachments[].url` and the WordPress media library ID is in `metadata.attachments[].media_id`.
+
+**Never tell users to upload to Imgur, Dropbox, Google Drive, or any external host.** The image is already where it needs to be.
+
+To attach an uploaded photo to a wing location:
+
+1. Find the relevant `post_id` for the location (use `list_wing_locations` if needed).
+2. Pull the `media_id` from the user's recent message metadata.
+3. Call `attach_wing_location_image` with both. That sets the photo as the location's featured image.
+4. Confirm with the user that the image is attached.
 
 ## Location Lookup Behavior
 
@@ -220,6 +234,11 @@ MD;
 			// Public submissions.
 			'submit_wing_review',
 			'submit_wing_location',
+
+			// Media attachment (chat-uploaded images → location featured image).
+			// Per-post capability check happens in the ability execute_callback;
+			// listing in the surface is safe because non-editors get a 403 back.
+			'attach_wing_location_image',
 
 			// Admin moderation. PermissionHelper / per-ability permission
 			// callbacks already gate the actual execution by capability —

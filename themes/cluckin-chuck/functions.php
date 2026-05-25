@@ -136,7 +136,8 @@ function cluckin_chuck_sync_coordinates_on_save( $post_id, $post, $update ) {
 	$longitude             = get_post_meta( $post_id, 'wing_longitude', true );
 	$last_geocoded_address = get_post_meta( $post_id, '_wing_geocoded_address', true );
 
-	$needs_geocode = '' === $latitude || '' === $longitude || $last_geocoded_address !== $address;
+	$has_valid_coordinates = '' !== $latitude && '' !== $longitude;
+	$needs_geocode         = ! $has_valid_coordinates || $last_geocoded_address !== $address;
 
 	if ( ! $needs_geocode ) {
 		return;
@@ -145,6 +146,16 @@ function cluckin_chuck_sync_coordinates_on_save( $post_id, $post, $update ) {
 	$result = CluckinChuck\geocode_address( $address );
 
 	if ( ! $result ) {
+		// If we already have valid coordinates for this exact address (e.g.
+		// they were resolved at submission time via the geocode-address
+		// ability), a transient Nominatim failure on re-save is harmless —
+		// don't surface a misleading "Geocoding failed" notice. Stamp the
+		// address as geocoded so we stop retrying on every subsequent save.
+		if ( $has_valid_coordinates && $last_geocoded_address !== $address ) {
+			update_post_meta( $post_id, '_wing_geocoded_address', $address );
+			return;
+		}
+
 		cluckin_chuck_set_geocode_notice( 'error', __( 'Geocoding failed for this address. Please verify and save again.', 'cluckin-chuck' ) );
 		return;
 	}

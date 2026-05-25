@@ -10,8 +10,8 @@
  *   - cluckin-chuck/list-pending
  *
  * Fires actions for side-effects (admin email notifications):
- *   - cluckin_chuck_review_submitted( int $comment_id, array $data, string $location_name )
- *   - cluckin_chuck_location_submitted( int $post_id, array $data )
+ *   - cluckin_chuck_review_submitted( int $comment_id, array $data, string $location_name, bool $auto_approved )
+ *   - cluckin_chuck_location_submitted( int $post_id, array $data, bool $auto_published )
  *
  * @package WingReviewSubmit
  * @since 0.2.0
@@ -70,52 +70,158 @@ class Submit_Abilities {
 	}
 
 	/**
-	 * Hook admin email notifications to submission actions.
+	 * Hook admin + submitter email notifications to submission actions.
+	 *
+	 * The `cluckin_chuck_*_submitted` actions fire from inside the execute_*
+	 * callbacks AFTER the auto-approve/auto-publish branch runs, so the
+	 * `$auto_*` boolean reflects the true post/comment state at hook time.
 	 */
 	private function register_notification_hooks(): void {
-		add_action( 'cluckin_chuck_review_submitted', array( $this, 'notify_admin_review' ), 10, 3 );
-		add_action( 'cluckin_chuck_location_submitted', array( $this, 'notify_admin_location' ), 10, 2 );
+		add_action( 'cluckin_chuck_review_submitted',   array( $this, 'notify_admin_review' ),     10, 4 );
+		add_action( 'cluckin_chuck_review_submitted',   array( $this, 'notify_submitter_review' ), 10, 4 );
+		add_action( 'cluckin_chuck_location_submitted', array( $this, 'notify_admin_location' ),     10, 3 );
+		add_action( 'cluckin_chuck_location_submitted', array( $this, 'notify_submitter_location' ), 10, 3 );
 	}
 
 	/**
 	 * Send admin email when a review is submitted.
 	 *
+	 * Subject + body branch on whether the review was auto-approved so the
+	 * admin doesn't get a "pending" email for a review that's already live.
+	 *
 	 * @param int    $comment_id    The new comment ID.
 	 * @param array  $data          Sanitized submission data.
 	 * @param string $location_name The wing location title.
+	 * @param bool   $auto_approved Whether the review was auto-approved on submission.
 	 */
-	public function notify_admin_review( int $comment_id, array $data, string $location_name ): void {
-		$comment_id; // Intentionally unused — available for future extensions.
-
+	public function notify_admin_review( int $comment_id, array $data, string $location_name, bool $auto_approved = false ): void {
 		$admin_email = get_option( 'admin_email' );
-		$subject     = 'New Wing Review Submitted - ' . $location_name;
-		$message     = "A new review has been submitted for {$location_name}.\n\n";
-		$message    .= "Reviewer: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
-		$message    .= "Overall Rating: {$data['rating']}/5\n\n";
-		$message    .= 'Moderate Comments: ' . admin_url( 'edit-comments.php?comment_status=moderated' );
+
+		if ( $auto_approved ) {
+			$subject  = 'New Wing Review Published - ' . $location_name;
+			$message  = "A new review for {$location_name} was auto-approved on submission.\n\n";
+			$action_label = 'View Review';
+			$action_url   = get_comment_link( $comment_id );
+		} else {
+			$subject  = 'New Wing Review Pending Moderation - ' . $location_name;
+			$message  = "A new review has been submitted for {$location_name} and is pending moderation.\n\n";
+			$action_label = 'Moderate Comments';
+			$action_url   = admin_url( 'edit-comments.php?comment_status=moderated' );
+		}
+
+		$message .= "Reviewer: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
+		$message .= "Overall Rating: {$data['rating']}/5\n\n";
+		$message .= "{$action_label}: {$action_url}";
 
 		wp_mail( $admin_email, $subject, $message );
 	}
 
 	/**
+	 * Send confirmation email to the reviewer themselves.
+	 *
+	 * Bails when the reviewer email matches the site admin_email to avoid
+	 * sending an admin two copies of the same notification.
+	 *
+	 * @param int    $comment_id    The new comment ID.
+	 * @param array  $data          Sanitized submission data.
+	 * @param string $location_name The wing location title.
+	 * @param bool   $auto_approved Whether the review was auto-approved on submission.
+	 */
+	public function notify_submitter_review( int $comment_id, array $data, string $location_name, bool $auto_approved = false ): void {
+		$comment_id; // Intentionally unused — available for future extensions.
+
+		$reviewer_email = (string) ( $data['reviewer_email'] ?? '' );
+		if ( '' === $reviewer_email || ! is_email( $reviewer_email ) ) {
+			return;
+		}
+		if ( strcasecmp( $reviewer_email, (string) get_option( 'admin_email' ) ) === 0 ) {
+			return;
+		}
+
+		if ( $auto_approved ) {
+			$subject = "Your review of {$location_name} is live";
+			$message = "Thanks for sharing your wings take! Your review of {$location_name} was published.\n\n";
+		} else {
+			$subject = "Thanks for reviewing {$location_name}";
+			$message = "Thanks for sharing your wings take! Your review of {$location_name} has been received and is pending moderation.\n\n";
+		}
+
+		$message .= "Rating: {$data['rating']}/5\n";
+		if ( ! empty( $data['review_text'] ) ) {
+			$message .= "Your words: \"{$data['review_text']}\"\n\n";
+		}
+
+		wp_mail( $reviewer_email, $subject, $message );
+	}
+
+	/**
 	 * Send admin email when a new location is submitted.
 	 *
-	 * @param int   $post_id The new pending post ID.
-	 * @param array $data    Sanitized submission data.
+	 * Subject + body branch on whether the location was auto-published so
+	 * the admin doesn't get a "pending review" email for a post that's
+	 * already live.
+	 *
+	 * @param int   $post_id        The new post ID.
+	 * @param array $data           Sanitized submission data.
+	 * @param bool  $auto_published Whether the location was auto-published on submission.
 	 */
-	public function notify_admin_location( int $post_id, array $data ): void {
-		$post_id; // Intentionally unused — available for future extensions.
-
+	public function notify_admin_location( int $post_id, array $data, bool $auto_published = false ): void {
 		$admin_email = get_option( 'admin_email' );
-		$subject     = 'New Wing Location Pending Review - ' . $data['location_name'];
-		$message     = "A new wing location has been submitted and is pending review.\n\n";
-		$message    .= "Location: {$data['location_name']}\n";
-		$message    .= "Submitted by: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
-		$message    .= "Address: {$data['address']}\n";
-		$message    .= "Overall Rating: {$data['rating']}/5\n\n";
-		$message    .= 'Review Posts: ' . admin_url( 'edit.php?post_type=wing_location&post_status=pending' );
+
+		if ( $auto_published ) {
+			$subject      = 'New Wing Location Published - ' . $data['location_name'];
+			$message      = "A new wing location was submitted and auto-published.\n\n";
+			$action_label = 'View Location';
+			$action_url   = get_permalink( $post_id );
+		} else {
+			$subject      = 'New Wing Location Pending Review - ' . $data['location_name'];
+			$message      = "A new wing location has been submitted and is pending review.\n\n";
+			$action_label = 'Review Pending Locations';
+			$action_url   = admin_url( 'edit.php?post_type=wing_location&post_status=pending' );
+		}
+
+		$message .= "Location: {$data['location_name']}\n";
+		$message .= "Submitted by: {$data['reviewer_name']} ({$data['reviewer_email']})\n";
+		$message .= "Address: {$data['address']}\n";
+		$message .= "Overall Rating: {$data['rating']}/5\n\n";
+		$message .= "{$action_label}: {$action_url}";
 
 		wp_mail( $admin_email, $subject, $message );
+	}
+
+	/**
+	 * Send confirmation email to the submitter themselves.
+	 *
+	 * Bails when the submitter email matches the site admin_email to avoid
+	 * sending an admin two copies of the same notification.
+	 *
+	 * @param int   $post_id        The new post ID.
+	 * @param array $data           Sanitized submission data.
+	 * @param bool  $auto_published Whether the location was auto-published on submission.
+	 */
+	public function notify_submitter_location( int $post_id, array $data, bool $auto_published = false ): void {
+		$reviewer_email = (string) ( $data['reviewer_email'] ?? '' );
+		if ( '' === $reviewer_email || ! is_email( $reviewer_email ) ) {
+			return;
+		}
+		if ( strcasecmp( $reviewer_email, (string) get_option( 'admin_email' ) ) === 0 ) {
+			return;
+		}
+
+		if ( $auto_published ) {
+			$subject = "Your wing spot is live: {$data['location_name']}";
+			$message = "Your submission for {$data['location_name']} was published.\n\n";
+			$message .= "View it: " . get_permalink( $post_id ) . "\n\n";
+		} else {
+			$subject = "Thanks for submitting {$data['location_name']}";
+			$message = "Thanks for adding a new wing spot! {$data['location_name']} has been received and is pending review.\n";
+			$message .= "We'll let you know when it goes live.\n\n";
+		}
+
+		$message .= "Address: {$data['address']}\n";
+		$message .= "Rating: {$data['rating']}/5\n";
+
+		wp_mail( $reviewer_email, $subject, $message );
 	}
 
 	// ------------------------------------------------------------------
@@ -288,6 +394,18 @@ class Submit_Abilities {
 			wp_set_comment_status( $comment_id, 'approve' );
 			$auto_approved = true;
 		}
+
+		/**
+		 * Fires after a wing review is submitted, AFTER auto-approval state is known.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param int    $comment_id    The new comment ID.
+		 * @param array  $data          Sanitized submission data.
+		 * @param string $location_name The wing location title.
+		 * @param bool   $auto_approved Whether the review was auto-approved on submission.
+		 */
+		do_action( 'cluckin_chuck_review_submitted', $comment_id, $data, get_the_title( $post_id ), $auto_approved );
 
 		return array(
 			'success'       => true,
@@ -474,6 +592,17 @@ class Submit_Abilities {
 			wp_publish_post( $post_id );
 			$auto_published = true;
 		}
+
+		/**
+		 * Fires after a new wing location is submitted, AFTER auto-publish state is known.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param int   $post_id        The new post ID.
+		 * @param array $data           Sanitized submission data.
+		 * @param bool  $auto_published Whether the location was auto-published on submission.
+		 */
+		do_action( 'cluckin_chuck_location_submitted', $post_id, $data, $auto_published );
 
 		return array(
 			'success'        => true,

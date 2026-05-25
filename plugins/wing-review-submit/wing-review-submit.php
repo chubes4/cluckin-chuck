@@ -292,17 +292,6 @@ function create_pending_review_comment( $post_id, $data ) {
 		add_comment_meta( $comment_id, 'wing_ppw', $data['ppw'] );
 	}
 
-	/**
-	 * Fires after a wing review comment is submitted and pending moderation.
-	 *
-	 * @since 0.2.0
-	 *
-	 * @param int    $comment_id    The new comment ID.
-	 * @param array  $data          Sanitized submission data.
-	 * @param string $location_name The wing location title.
-	 */
-	do_action( 'cluckin_chuck_review_submitted', $comment_id, $data, get_the_title( $post_id ) );
-
 	return $comment_id;
 }
 
@@ -364,16 +353,6 @@ function create_pending_location( $data ) {
 	// re-geocoding the same address adds network noise and surfaces a
 	// false-positive "Geocoding failed" admin notice if Nominatim hiccups.
 	update_post_meta( $post_id, '_wing_geocoded_address', $data['address'] );
-
-	/**
-	 * Fires after a new wing location is submitted and pending approval.
-	 *
-	 * @since 0.2.0
-	 *
-	 * @param int   $post_id The new pending post ID.
-	 * @param array $data    Sanitized submission data.
-	 */
-	do_action( 'cluckin_chuck_location_submitted', $post_id, $data );
 
 	return $post_id;
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-05-25
+
+### Added
+- attach chat-uploaded images to wing locations as featured images (#11, #13)
+
 ## [0.3.2] - 2026-05-25
 
 ### Changed

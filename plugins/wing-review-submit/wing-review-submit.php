@@ -357,6 +357,14 @@ function create_pending_location( $data ) {
 		) );
 	}
 
+	// Mark the address as already geocoded so the theme's save_post sync
+	// hook (cluckin_chuck_sync_coordinates_on_save) doesn't fire a redundant
+	// Nominatim lookup on the next save (e.g. approve → wp_publish_post).
+	// Lat/lng were resolved at chat time via the geocode-address ability;
+	// re-geocoding the same address adds network noise and surfaces a
+	// false-positive "Geocoding failed" admin notice if Nominatim hiccups.
+	update_post_meta( $post_id, '_wing_geocoded_address', $data['address'] );
+
 	/**
 	 * Fires after a new wing location is submitted and pending approval.
 	 *

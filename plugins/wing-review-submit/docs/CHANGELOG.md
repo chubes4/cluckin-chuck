@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.6] - 2026-05-25
+
+### Fixed
+- stop exposing reviewer identity to the chat agent (#7)
+- suppress false-positive 'Geocoding failed' notice on publish
+
 ## [0.1.5] - 2026-03-30
 
 ### Added

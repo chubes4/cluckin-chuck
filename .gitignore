@@ -17,3 +17,7 @@ vendor/
 # Temporary files
 *.tmp
 *.temp
+
+# PHPUnit
+.phpunit.result.cache
+phpunit.xml

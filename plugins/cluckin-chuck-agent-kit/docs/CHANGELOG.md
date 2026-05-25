@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.2] - 2026-05-25
+
+### Changed
+- test(agent-kit): commit phpunit test scaffold + ignore phpunit caches
+- release(agent-kit): v0.3.1 — wire fab_label and fab_icon for Chuck branding
+
+### Fixed
+- clarify chat supports anonymous + logged-in submissions
+- stop exposing reviewer identity to the chat agent (#7)
+
 ## [0.3.1] - 2026-05-21
 
 ### Added

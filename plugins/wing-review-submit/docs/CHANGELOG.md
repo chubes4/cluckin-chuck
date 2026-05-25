@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.7] - 2026-05-25
+
+### Fixed
+- auto-publish-aware admin emails + submitter confirmation (#8, #9)
+
 ## [0.1.6] - 2026-05-25
 
 ### Fixed

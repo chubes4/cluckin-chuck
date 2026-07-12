@@ -75,13 +75,24 @@ function render_callback( $attributes, $content ) {
 	$review_count   = intval( $meta['wing_review_count'] );
 	$min_ppw        = floatval( $meta['wing_min_ppw'] );
 	$max_ppw        = floatval( $meta['wing_max_ppw'] );
+	$latitude       = floatval( $meta['wing_latitude'] );
+	$longitude      = floatval( $meta['wing_longitude'] );
+	$display_mode   = 'compact' === ( $attributes['displayMode'] ?? 'full' ) ? 'compact' : 'full';
+	$destination    = ( 0.0 !== $latitude || 0.0 !== $longitude ) ? $latitude . ',' . $longitude : $address;
+	$directions_url = $destination ? add_query_arg(
+		array(
+			'api'         => '1',
+			'destination' => $destination,
+		),
+		'https://www.google.com/maps/dir/'
+	) : '';
 
 	$full_stars  = str_repeat( '★', (int) round( $average_rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $average_rating ) );
 
 	ob_start();
 	?>
-	<div class="wing-location-details">
+	<div class="wing-location-details wing-location-details--<?php echo esc_attr( $display_mode ); ?>">
 		<div class="wing-location-details-header">
 			<?php if ( $average_rating > 0 ) : ?>
 				<div class="wing-location-rating">
@@ -127,6 +138,15 @@ function render_callback( $attributes, $content ) {
 				</div>
 			<?php endif; ?>
 		</div>
+
+		<?php if ( 'full' === $display_mode ) : ?>
+			<div class="wing-location-actions">
+				<?php if ( $directions_url ) : ?>
+					<a class="wing-location-action wing-location-action--primary" href="<?php echo esc_url( $directions_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get Directions', 'wing-location-details' ); ?> ↗</a>
+				<?php endif; ?>
+				<a class="wing-location-action" href="#wing-review-submit-section"><?php esc_html_e( 'Review This Spot', 'wing-location-details' ); ?></a>
+			</div>
+		<?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();

@@ -55,6 +55,60 @@
 	gap: 0.75rem;
 }
 
+.wing-location-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 1.25rem;
+	padding-top: 1rem;
+	border-top: 1px solid #e0e0e0;
+}
+
+.wing-location-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.65rem 1rem;
+	border: 2px solid #d84315;
+	border-radius: 6px;
+	color: #d84315;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.wing-location-action--primary {
+	background: #d84315;
+	color: #fff;
+}
+
+.wing-location-action:hover,
+.wing-location-action:focus {
+	text-decoration: underline;
+}
+
+.wing-location-details--compact {
+	padding: 0;
+	border: 0;
+	margin: 0;
+	background: transparent;
+
+	.wing-location-details-header {
+		gap: 0.5rem;
+		margin-bottom: 0.65rem;
+		padding-bottom: 0;
+		border-bottom: 0;
+	}
+
+	.wing-location-details-body {
+		gap: 0.35rem;
+	}
+
+	.wing-website,
+	.wing-instagram {
+		display: none;
+	}
+}
+
 .wing-detail-row {
 	display: flex;
 	align-items: flex-start;

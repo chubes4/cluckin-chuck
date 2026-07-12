@@ -12,7 +12,13 @@
 		"html": false,
 		"multiple": false
 	},
-	"attributes": {},
+	"attributes": {
+		"displayMode": {
+			"type": "string",
+			"default": "full",
+			"enum": ["full", "compact"]
+		}
+	},
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./editor.css",
 	"style": "file:./style.css"

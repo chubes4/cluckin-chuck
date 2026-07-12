@@ -127,7 +127,7 @@ function render_callback() {
 
 	ob_start();
 	?>
-	<div class="wing-review-submit-block">
+	<div id="wing-review-submit-section" class="wing-review-submit-block">
 		<button
 			class="wing-review-submit-button"
 			type="button"

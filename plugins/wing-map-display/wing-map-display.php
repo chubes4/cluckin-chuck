@@ -117,6 +117,8 @@ function get_wing_locations() {
 		$address      = $meta['wing_address'];
 		$avg_rating   = floatval( $meta['wing_average_rating'] );
 		$review_count = intval( $meta['wing_review_count'] );
+		$min_ppw      = floatval( $meta['wing_min_ppw'] );
+		$max_ppw      = floatval( $meta['wing_max_ppw'] );
 
 		$locations[] = array(
 			'id'          => $post->ID,
@@ -124,8 +126,11 @@ function get_wing_locations() {
 			'lat'         => $lat,
 			'lng'         => $lng,
 			'address'     => $address,
-			'rating'      => round( $avg_rating ),
+			'rating'      => $avg_rating,
 			'reviewCount' => $review_count,
+			'minPpw'      => $min_ppw,
+			'maxPpw'      => $max_ppw,
+			'imageUrl'    => get_the_post_thumbnail_url( $post, 'medium' ) ?: '',
 			'url'         => get_permalink( $post ),
 		);
 	}

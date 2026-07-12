@@ -97,6 +97,20 @@ function cluckin_chuck_submission_admin_links() {
 }
 add_shortcode( 'cluckin_chuck_submission_admin_links', 'cluckin_chuck_submission_admin_links' );
 
+/**
+ * Render the site copyright with the current year.
+ *
+ * @return string
+ */
+function cluckin_chuck_copyright() {
+	return sprintf(
+		'&copy; %s %s',
+		esc_html( wp_date( 'Y' ) ),
+		esc_html__( 'Cluckin Chuck. All rights reserved.', 'cluckin-chuck' )
+	);
+}
+add_shortcode( 'cluckin_chuck_copyright', 'cluckin_chuck_copyright' );
+
 function cluckin_chuck_enqueue_editor_assets() {
 	$asset_file = get_theme_file_path( 'build/location-meta-panel/index.asset.php' );
 

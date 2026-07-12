@@ -590,7 +590,18 @@ class Submit_Abilities {
 
 		// Auto-publish locations submitted by users who can publish posts.
 		if ( current_user_can( 'publish_posts' ) ) {
-			wp_publish_post( $post_id );
+			$published = wp_update_post(
+				array(
+					'ID'          => $post_id,
+					'post_status' => 'publish',
+				),
+				true
+			);
+
+			if ( is_wp_error( $published ) ) {
+				return $published;
+			}
+
 			$auto_published = true;
 		}
 
@@ -805,7 +816,17 @@ class Submit_Abilities {
 			);
 		}
 
-		wp_publish_post( $post_id );
+		$published = wp_update_post(
+			array(
+				'ID'          => $post_id,
+				'post_status' => 'publish',
+			),
+			true
+		);
+
+		if ( is_wp_error( $published ) ) {
+			return $published;
+		}
 
 		return array(
 			'success' => true,

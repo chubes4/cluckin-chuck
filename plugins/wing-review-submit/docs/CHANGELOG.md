@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.0] - 2026-07-12
+
+### Added
+- enrich wing location browsing
+
 ## [0.2.0] - 2026-05-25
 
 ### Added

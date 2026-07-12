@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2026-07-12
+
+### Fixed
+- validate reviews before processing photos
+
 ## [0.2.0] - 2026-07-12
 
 ### Added

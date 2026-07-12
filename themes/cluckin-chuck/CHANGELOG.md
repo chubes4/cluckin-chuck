@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0] - 2026-07-12
+
+### Added
+- connect wing discovery and submissions
+
 ## [0.3.0] - 2026-07-12
 
 ### Added

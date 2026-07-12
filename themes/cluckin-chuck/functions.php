@@ -56,7 +56,7 @@ add_action( 'init', 'cluckin_chuck_register_abilities' );
  *
  * @return string
  */
-function cluckin_chuck_submission_admin_links() {
+function cluckin_chuck_render_submission_admin_links() {
 	if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'moderate_comments' ) ) {
 		return '';
 	}
@@ -95,21 +95,41 @@ function cluckin_chuck_submission_admin_links() {
 
 	return (string) ob_get_clean();
 }
-add_shortcode( 'cluckin_chuck_submission_admin_links', 'cluckin_chuck_submission_admin_links' );
 
 /**
  * Render the site copyright with the current year.
  *
  * @return string
  */
-function cluckin_chuck_copyright() {
+function cluckin_chuck_render_copyright() {
 	return sprintf(
-		'&copy; %s %s',
+		'<p class="has-text-align-center" style="margin-bottom:var(--wp--preset--spacing--30)">&copy; %s %s</p>',
 		esc_html( wp_date( 'Y' ) ),
 		esc_html__( 'Cluckin Chuck. All rights reserved.', 'cluckin-chuck' )
 	);
 }
-add_shortcode( 'cluckin_chuck_copyright', 'cluckin_chuck_copyright' );
+
+/**
+ * Register the theme's small dynamic utility blocks.
+ */
+function cluckin_chuck_register_utility_blocks() {
+	register_block_type(
+		'cluckin-chuck/copyright',
+		array(
+			'api_version'     => 3,
+			'render_callback' => 'cluckin_chuck_render_copyright',
+		)
+	);
+
+	register_block_type(
+		'cluckin-chuck/submission-admin-links',
+		array(
+			'api_version'     => 3,
+			'render_callback' => 'cluckin_chuck_render_submission_admin_links',
+		)
+	);
+}
+add_action( 'init', 'cluckin_chuck_register_utility_blocks' );
 
 function cluckin_chuck_enqueue_editor_assets() {
 	$asset_file = get_theme_file_path( 'build/location-meta-panel/index.asset.php' );

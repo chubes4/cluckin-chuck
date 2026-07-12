@@ -191,11 +191,6 @@ body {
 	text-decoration: none;
 }
 
-footer .wp-block-shortcode {
-	margin-bottom: var(--wp--preset--spacing--30);
-	text-align: center;
-}
-
 @media (max-width: 700px) {
 	.wing-admin-review-panel {
 		align-items: flex-start;

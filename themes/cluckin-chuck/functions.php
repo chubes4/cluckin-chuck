@@ -51,7 +51,7 @@ add_action( 'init', 'cluckin_chuck_register_abilities' );
 /**
  * Render quick links for administrators reviewing wing submissions.
  *
- * The shortcode intentionally renders nothing for visitors without moderation
+ * The block intentionally renders nothing for visitors without moderation
  * access, allowing it to live safely in public-facing templates.
  *
  * @return string
@@ -110,6 +110,114 @@ function cluckin_chuck_render_copyright() {
 }
 
 /**
+ * Render a location image with branded artwork as its fallback.
+ *
+ * @param array    $attributes Block attributes.
+ * @param string   $content    Existing block content.
+ * @param WP_Block $block      Block instance carrying the queried post ID.
+ * @return string
+ */
+function cluckin_chuck_render_location_image( $attributes, $content, $block ) {
+	$post_id   = isset( $block->context['postId'] ) ? (int) $block->context['postId'] : get_the_ID();
+	$is_linked = ! isset( $attributes['isLink'] ) || (bool) $attributes['isLink'];
+	$class     = 'wing-location-image' . ( ! empty( $attributes['isHero'] ) ? ' is-hero' : '' );
+
+	if ( has_post_thumbnail( $post_id ) ) {
+		$image = get_the_post_thumbnail(
+			$post_id,
+			'large',
+			array(
+				'class'   => 'wing-location-image__media',
+				'loading' => 'lazy',
+			)
+		);
+	} else {
+		$image = sprintf(
+			'<img class="wing-location-image__media wing-location-image__fallback" src="%s" alt="%s" loading="lazy">',
+			esc_url( get_theme_file_uri( 'assets/wing-placeholder.svg' ) ),
+			esc_attr( sprintf( __( 'Illustration for %s', 'cluckin-chuck' ), get_the_title( $post_id ) ) )
+		);
+	}
+
+	if ( $is_linked ) {
+		$image = sprintf( '<a href="%s">%s</a>', esc_url( get_permalink( $post_id ) ), $image );
+	}
+
+	return sprintf( '<figure class="%s">%s</figure>', esc_attr( $class ), $image );
+}
+
+/**
+ * Render up to three nearby wing locations.
+ *
+ * @return string
+ */
+function cluckin_chuck_render_related_locations() {
+	$post_id   = get_the_ID();
+	$latitude  = (float) get_post_meta( $post_id, 'wing_latitude', true );
+	$longitude = (float) get_post_meta( $post_id, 'wing_longitude', true );
+	$locations = get_posts(
+		array(
+			'post_type'      => 'wing_location',
+			'post_status'    => 'publish',
+			'posts_per_page' => 50,
+			'post__not_in'   => array( $post_id ),
+		)
+	);
+
+	if ( ! $locations ) {
+		return '';
+	}
+
+	if ( $latitude && $longitude ) {
+		usort(
+			$locations,
+			static function ( $first, $second ) use ( $latitude, $longitude ) {
+				$distance = static function ( $location ) use ( $latitude, $longitude ) {
+					$location_lat = (float) get_post_meta( $location->ID, 'wing_latitude', true );
+					$location_lng = (float) get_post_meta( $location->ID, 'wing_longitude', true );
+
+					if ( ! $location_lat || ! $location_lng ) {
+						return PHP_FLOAT_MAX;
+					}
+
+					$lat_delta = deg2rad( $location_lat - $latitude );
+					$lng_delta = deg2rad( $location_lng - $longitude );
+					$value     = sin( $lat_delta / 2 ) ** 2 + cos( deg2rad( $latitude ) ) * cos( deg2rad( $location_lat ) ) * sin( $lng_delta / 2 ) ** 2;
+
+					return 3959 * 2 * asin( min( 1, sqrt( $value ) ) );
+				};
+
+				return $distance( $first ) <=> $distance( $second );
+			}
+		);
+	}
+
+	$locations = array_slice( $locations, 0, 3 );
+	ob_start();
+	?>
+	<section class="wing-related-locations" aria-labelledby="nearby-wing-spots">
+		<h2 id="nearby-wing-spots"><?php esc_html_e( 'More Wing Spots Nearby', 'cluckin-chuck' ); ?></h2>
+		<div class="wing-related-locations__grid">
+			<?php foreach ( $locations as $location ) : ?>
+				<article class="wing-related-location-card">
+					<a href="<?php echo esc_url( get_permalink( $location ) ); ?>">
+						<?php if ( has_post_thumbnail( $location ) ) : ?>
+							<?php echo get_the_post_thumbnail( $location, 'medium_large', array( 'class' => 'wing-related-location-card__image', 'loading' => 'lazy' ) ); ?>
+						<?php else : ?>
+							<img class="wing-related-location-card__image" src="<?php echo esc_url( get_theme_file_uri( 'assets/wing-placeholder.svg' ) ); ?>" alt="" loading="lazy">
+						<?php endif; ?>
+						<strong><?php echo esc_html( get_the_title( $location ) ); ?></strong>
+					</a>
+				</article>
+			<?php endforeach; ?>
+		</div>
+	</section>
+	<?php
+
+	return (string) ob_get_clean();
+}
+
+/**
  * Register the theme's small dynamic utility blocks.
  */
 function cluckin_chuck_register_utility_blocks() {
@@ -126,6 +234,27 @@ function cluckin_chuck_register_utility_blocks() {
 		array(
 			'api_version'     => 3,
 			'render_callback' => 'cluckin_chuck_render_submission_admin_links',
+		)
+	);
+
+	register_block_type(
+		'cluckin-chuck/location-image',
+		array(
+			'api_version'     => 3,
+			'attributes'      => array(
+				'isHero' => array( 'type' => 'boolean', 'default' => false ),
+				'isLink' => array( 'type' => 'boolean', 'default' => true ),
+			),
+			'uses_context'    => array( 'postId' ),
+			'render_callback' => 'cluckin_chuck_render_location_image',
+		)
+	);
+
+	register_block_type(
+		'cluckin-chuck/related-locations',
+		array(
+			'api_version'     => 3,
+			'render_callback' => 'cluckin_chuck_render_related_locations',
 		)
 	);
 }

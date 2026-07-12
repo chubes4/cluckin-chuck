@@ -3,7 +3,7 @@
  * Plugin Name: Wing Location Details
  * Plugin URI: https://chubes.net
  * Description: Hero block displaying wing location details (address, website, Instagram, ratings, PPW)
- * Version: 0.3.0
+ * Version: 0.3.1
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Chris Huber
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WING_LOCATION_DETAILS_VERSION', '0.3.0' );
+define( 'WING_LOCATION_DETAILS_VERSION', '0.3.1' );
 define( 'WING_LOCATION_DETAILS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WING_LOCATION_DETAILS_URL', plugin_dir_url( __FILE__ ) );
 

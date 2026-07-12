@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.2] - 2026-07-12
+
+### Fixed
+- replace utility shortcodes with blocks
+
 ## [0.5.1] - 2026-07-12
 
 ### Fixed

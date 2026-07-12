@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.1] - 2026-07-12
+
+### Fixed
+- use current year in footer
+
 ## [0.5.0] - 2026-07-12
 
 ### Added

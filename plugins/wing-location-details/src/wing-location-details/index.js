@@ -7,8 +7,10 @@
 
 import { registerBlockType } from '@wordpress/blocks';
 import Edit from './edit';
+import './editor.scss';
+import './style.scss';
 
-registerBlockType('wing-location-details/wing-location-details', {
+registerBlockType( 'wing-location-details/wing-location-details', {
 	edit: Edit,
 	save: () => null,
-});
+} );

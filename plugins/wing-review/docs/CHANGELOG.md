@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.0] - 2026-07-12
+
+### Added
+- add review photos and wing galleries
+
 ## [0.1.3] - 2026-03-30
 
 ### Added

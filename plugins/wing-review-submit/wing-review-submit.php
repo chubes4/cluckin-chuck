@@ -175,17 +175,6 @@ function render_callback() {
 					</div>
 					<?php endif; ?>
 
-					<div class="wing-form-row">
-						<div class="wing-form-field">
-							<label for="wing_reviewer_name">Your Name <span class="required">*</span></label>
-							<input type="text" id="wing_reviewer_name" name="wing_reviewer_name" required>
-						</div>
-						<div class="wing-form-field">
-							<label for="wing_reviewer_email">Your Email <span class="required">*</span></label>
-							<input type="email" id="wing_reviewer_email" name="wing_reviewer_email" required>
-						</div>
-					</div>
-
 					<div class="wing-form-field">
 						<label>Overall Rating <span class="required">*</span></label>
 						<div class="wing-rating-input">

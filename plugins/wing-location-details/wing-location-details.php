@@ -197,7 +197,7 @@ function render_callback( $attributes, $content ) {
 		<?php if ( 'full' === $display_mode ) : ?>
 			<div class="wing-location-actions">
 				<?php if ( $directions_url ) : ?>
-					<a class="wing-location-action wing-location-action--primary" href="<?php echo esc_url( $directions_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get Directions', 'wing-location-details' ); ?> ↗</a>
+					<a class="wing-location-action wing-location-action--primary" href="<?php echo esc_url( $directions_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get Directions', 'wing-location-details' ); ?></a>
 				<?php endif; ?>
 				<a class="wing-location-action" href="#wing-review-submit-section"><?php esc_html_e( 'Review This Spot', 'wing-location-details' ); ?></a>
 			</div>

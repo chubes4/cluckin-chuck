@@ -50,9 +50,18 @@
 }
 
 .wing-location-details-body {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 0.75rem;
+	padding: 1rem;
+	border: 1px solid #eadfca;
+	border-radius: 10px;
+	background: #fffaf0;
+}
+
+.wing-location-info-title {
+	margin: 0 0 0.75rem;
+	font-size: 1.2rem;
 }
 
 .wing-score-grid {
@@ -175,7 +184,24 @@
 	}
 
 	.wing-location-details-body {
+		display: flex;
+		flex-direction: column;
 		gap: 0.35rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+	}
+
+	.wing-detail-row {
+		padding: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.wing-detail-icon {
+		width: 1.5rem;
+		height: 1.5rem;
+		background: transparent;
 	}
 
 	.wing-website,
@@ -186,13 +212,24 @@
 
 .wing-detail-row {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: 0.75rem;
+	min-width: 0;
+	padding: 0.8rem;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(44, 24, 16, 0.08);
 }
 
 .wing-detail-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	flex-shrink: 0;
-	width: 1.5rem;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 50%;
+	background: #fdf0df;
 	text-align: center;
 }
 
@@ -203,7 +240,9 @@
 
 .wing-detail-row a {
 	color: #0073aa;
+	font-weight: 600;
 	text-decoration: none;
+	overflow-wrap: anywhere;
 }
 
 .wing-detail-row a:hover {

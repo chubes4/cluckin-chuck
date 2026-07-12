@@ -167,6 +167,10 @@ function render_callback( $attributes, $content ) {
 			</div>
 		<?php endif; ?>
 
+		<?php if ( 'full' === $display_mode ) : ?>
+			<h2 class="wing-location-info-title"><?php esc_html_e( 'Visit This Spot', 'wing-location-details' ); ?></h2>
+		<?php endif; ?>
+
 		<div class="wing-location-details-body">
 			<?php if ( $address ) : ?>
 				<div class="wing-detail-row wing-address">

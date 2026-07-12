@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1] - 2026-07-12
+
+### Fixed
+- simplify fallback wing artwork
+
 ## [0.6.0] - 2026-07-12
 
 ### Added

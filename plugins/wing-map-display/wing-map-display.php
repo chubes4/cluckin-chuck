@@ -122,7 +122,7 @@ function get_wing_locations() {
 
 		$locations[] = array(
 			'id'          => $post->ID,
-			'title'       => get_the_title( $post ),
+			'title'       => html_entity_decode( get_the_title( $post ), ENT_QUOTES, get_bloginfo( 'charset' ) ),
 			'lat'         => $lat,
 			'lng'         => $lng,
 			'address'     => $address,

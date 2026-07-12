@@ -149,3 +149,51 @@ body {
 	color: var(--dark-text);
 	margin-right: 0.5rem;
 }
+
+.wing-archive-hero h1 {
+	color: #fff;
+}
+
+.wing-archive-hero .is-style-outline .wp-block-button__link {
+	border-color: #fff;
+	color: #fff;
+}
+
+.wing-admin-review-panel {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 3rem;
+	padding: 1rem 1.5rem;
+	border-left: 4px solid var(--golden-crispy);
+	border-radius: 8px;
+	background: #fff;
+}
+
+.wing-admin-review-panel p {
+	margin: 0;
+}
+
+.wing-admin-review-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.wing-admin-review-actions a {
+	display: inline-block;
+	padding: 0.55rem 0.9rem;
+	border-radius: 4px;
+	background: var(--wing-sauce-orange);
+	color: #fff;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+@media (max-width: 700px) {
+	.wing-admin-review-panel {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}

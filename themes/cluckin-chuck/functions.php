@@ -48,6 +48,55 @@ function cluckin_chuck_register_abilities() {
 }
 add_action( 'init', 'cluckin_chuck_register_abilities' );
 
+/**
+ * Render quick links for administrators reviewing wing submissions.
+ *
+ * The shortcode intentionally renders nothing for visitors without moderation
+ * access, allowing it to live safely in public-facing templates.
+ *
+ * @return string
+ */
+function cluckin_chuck_submission_admin_links() {
+	if ( ! current_user_can( 'edit_others_posts' ) && ! current_user_can( 'moderate_comments' ) ) {
+		return '';
+	}
+
+	$location_counts  = wp_count_posts( 'wing_location' );
+	$pending_locations = isset( $location_counts->pending ) ? (int) $location_counts->pending : 0;
+	$pending_reviews   = (int) get_comments(
+		array(
+			'post_type' => 'wing_location',
+			'status'    => 'hold',
+			'count'     => true,
+		)
+	);
+
+	$location_label = sprintf(
+		/* translators: %d: number of pending wing locations. */
+		_n( '%d pending location', '%d pending locations', $pending_locations, 'cluckin-chuck' ),
+		$pending_locations
+	);
+	$review_label = sprintf(
+		/* translators: %d: number of pending wing reviews. */
+		_n( '%d pending review', '%d pending reviews', $pending_reviews, 'cluckin-chuck' ),
+		$pending_reviews
+	);
+
+	ob_start();
+	?>
+	<aside class="wing-admin-review-panel" aria-label="Wing submission moderation">
+		<p><strong><?php esc_html_e( 'Chuck needs a ruling', 'cluckin-chuck' ); ?></strong><br><?php esc_html_e( 'Review community submissions without hunting through the dashboard.', 'cluckin-chuck' ); ?></p>
+		<div class="wing-admin-review-actions">
+			<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=wing_location&post_status=pending' ) ); ?>"><?php echo esc_html( $location_label ); ?></a>
+			<a href="<?php echo esc_url( admin_url( 'edit-comments.php?comment_status=moderated&post_type=wing_location' ) ); ?>"><?php echo esc_html( $review_label ); ?></a>
+		</div>
+	</aside>
+	<?php
+
+	return (string) ob_get_clean();
+}
+add_shortcode( 'cluckin_chuck_submission_admin_links', 'cluckin_chuck_submission_admin_links' );
+
 function cluckin_chuck_enqueue_editor_assets() {
 	$asset_file = get_theme_file_path( 'build/location-meta-panel/index.asset.php' );
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.1] - 2026-07-12
+
+### Fixed
+- remove duplicate reviewer fields
+
 ## [0.4.0] - 2026-07-12
 
 ### Added

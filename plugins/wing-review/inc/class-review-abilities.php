@@ -253,6 +253,13 @@ class Review_Abilities {
 			);
 		}
 
+		$photo_ids = (array) get_comment_meta( $comment_id, 'wing_photo_ids', true );
+		foreach ( array_filter( array_map( 'absint', $photo_ids ) ) as $photo_id ) {
+			if ( 'pending' === get_post_meta( $photo_id, '_wing_photo_status', true ) ) {
+				wp_delete_attachment( $photo_id, true );
+			}
+		}
+
 		$result = wp_trash_comment( $comment_id );
 
 		if ( ! $result ) {
@@ -434,6 +441,7 @@ class Review_Abilities {
 				'wing_count'        => $wing_count,
 				'total_price'       => $total_price,
 				'ppw'               => $wing_count > 0 ? round( $total_price / $wing_count, 2 ) : 0,
+				'photo_ids'         => array_values( array_filter( array_map( 'absint', $attrs['photoIds'] ?? array() ) ) ),
 			);
 		}
 

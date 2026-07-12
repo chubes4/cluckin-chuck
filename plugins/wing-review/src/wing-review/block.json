@@ -6,7 +6,7 @@
 	"category": "widgets",
 	"icon": "star-filled",
 	"description": "Displays a wing location review with ratings",
-	"keywords": ["review", "wings", "rating", "restaurant"],
+	"keywords": [ "review", "wings", "rating", "restaurant" ],
 	"textdomain": "wing-review",
 	"supports": {
 		"html": false
@@ -51,6 +51,13 @@
 		"totalPrice": {
 			"type": "number",
 			"default": 0
+		},
+		"photoIds": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "integer"
+			}
 		}
 	},
 	"editorScript": "file:./index.js",

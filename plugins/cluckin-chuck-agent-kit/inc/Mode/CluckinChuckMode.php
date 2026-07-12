@@ -170,8 +170,8 @@ To attach an uploaded photo to a wing location:
 
 1. Find the relevant `post_id` for the location (use `list_wing_locations` if needed).
 2. Pull the `media_id` from the user's recent message metadata.
-3. Call `attach_wing_location_image` with both. That sets the photo as the location's featured image.
-4. Confirm with the user that the image is attached.
+3. Call `attach_wing_location_image` with both. That adds the photo to the location's community gallery; the first photo also becomes its featured image.
+4. Confirm with the user that the image was added to the gallery.
 
 ## Location Lookup Behavior
 

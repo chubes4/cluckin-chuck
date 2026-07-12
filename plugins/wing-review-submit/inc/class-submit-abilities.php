@@ -284,6 +284,11 @@ class Submit_Abilities {
 							'minimum' => 0,
 							'default' => 0,
 						),
+						'photo_ids'         => array(
+							'type'    => 'array',
+							'items'   => array( 'type' => 'integer' ),
+							'default' => array(),
+						),
 					),
 				),
 				'output_schema'       => array(
@@ -334,6 +339,7 @@ class Submit_Abilities {
 			'review_text'       => sanitize_textarea_field( $input['review_text'] ?? '' ),
 			'wing_count'        => absint( $input['wing_count'] ?? 0 ),
 			'total_price'       => floatval( $input['total_price'] ?? 0 ),
+			'photo_ids'         => array_values( array_filter( array_map( 'absint', $input['photo_ids'] ?? array() ) ) ),
 		);
 
 		// Auto-fill reviewer identity from the logged-in user. The ability's
@@ -735,7 +741,17 @@ class Submit_Abilities {
 			);
 		}
 
-		set_post_thumbnail( $post_id, $media_id );
+		wp_update_post(
+			array(
+				'ID'          => $media_id,
+				'post_parent' => $post_id,
+			)
+		);
+		update_post_meta( $media_id, '_wing_photo_status', 'approved' );
+
+		if ( ! has_post_thumbnail( $post_id ) ) {
+			set_post_thumbnail( $post_id, $media_id );
+		}
 
 		return array(
 			'success'    => true,

@@ -24,7 +24,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	const latField = document.getElementById( 'wing_latitude' );
 	const lngField = document.getElementById( 'wing_longitude' );
 	const postIdField = document.getElementById( 'wing_post_id' );
-	const isExistingPost = Boolean( postIdField && parseInt( postIdField.value, 10 ) > 0 );
+	const isExistingPost = Boolean(
+		postIdField && parseInt( postIdField.value, 10 ) > 0
+	);
 
 	submitButton.addEventListener( 'click', ( event ) => {
 		event.preventDefault();
@@ -49,7 +51,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	overlay.addEventListener( 'click', closeModal );
 
 	document.addEventListener( 'keydown', ( event ) => {
-		if ( 'Escape' === event.key && modal.classList.contains( 'wing-modal-open' ) ) {
+		if (
+			'Escape' === event.key &&
+			modal.classList.contains( 'wing-modal-open' )
+		) {
 			closeModal();
 		}
 	} );
@@ -72,28 +77,39 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		geocodeIndicator.textContent = 'Geocoding...';
 		geocodeIndicator.className = 'geocode-indicator geocode-loading';
 
-		fetch( `${ wingReviewSubmitData.restUrl }${ wingReviewSubmitData.geocodePath || '/locations/geocode' }`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': wingReviewSubmitData.nonce,
-			},
-			body: JSON.stringify( { address } ),
-		} )
-			.then( ( response ) => response.json().then( ( data ) => ( { ok: response.ok, data } ) ) )
+		fetch(
+			`${ wingReviewSubmitData.restUrl }${
+				wingReviewSubmitData.geocodePath || '/locations/geocode'
+			}`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': wingReviewSubmitData.nonce,
+				},
+				body: JSON.stringify( { address } ),
+			}
+		)
+			.then( ( response ) =>
+				response
+					.json()
+					.then( ( data ) => ( { ok: response.ok, data } ) )
+			)
 			.then( ( { ok, data } ) => {
 				if ( ok && data.lat && data.lng ) {
 					latField.value = data.lat;
 					lngField.value = data.lng;
 					geocodeIndicator.textContent = 'Location found';
-					geocodeIndicator.className = 'geocode-indicator geocode-success';
+					geocodeIndicator.className =
+						'geocode-indicator geocode-success';
 				} else {
-					geocodeIndicator.textContent = data.message || 'Could not find location';
-					geocodeIndicator.className = 'geocode-indicator geocode-error';
+					geocodeIndicator.textContent =
+						data.message || 'Could not find location';
+					geocodeIndicator.className =
+						'geocode-indicator geocode-error';
 				}
 			} )
-			.catch( ( error ) => {
-				console.error( 'Geocoding error:', error );
+			.catch( () => {
 				geocodeIndicator.textContent = 'Geocoding failed';
 				geocodeIndicator.className = 'geocode-indicator geocode-error';
 			} );
@@ -109,7 +125,9 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		const formData = new FormData( form );
 		const payload = {};
 		formData.forEach( ( value, key ) => {
-			payload[ key ] = value;
+			if ( ! ( value instanceof File ) ) {
+				payload[ key ] = value;
+			}
 		} );
 
 		const submitBtn = form.querySelector( 'button[type="submit"]' );
@@ -118,33 +136,53 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		submitBtn.textContent = 'Submitting...';
 
 		const submitPath = isExistingPost
-			? ( wingReviewSubmitData.submitReviewPath || '/reviews/submit' )
-			: ( wingReviewSubmitData.submitLocationPath || '/locations/submit' );
+			? wingReviewSubmitData.submitReviewPath || '/reviews/submit'
+			: wingReviewSubmitData.submitLocationPath || '/locations/submit';
 
-		fetch( `${ wingReviewSubmitData.restUrl }${ submitPath }`, {
+		const hasPhotos =
+			isExistingPost &&
+			formData
+				.getAll( 'wing_photos[]' )
+				.some( ( file ) => file.size > 0 );
+		const requestOptions = {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
 				'X-WP-Nonce': wingReviewSubmitData.nonce,
 			},
-			body: JSON.stringify( payload ),
-		} )
-			.then( ( response ) => response.json().then( ( data ) => ( { ok: response.ok, data } ) ) )
+			body: hasPhotos ? formData : JSON.stringify( payload ),
+		};
+
+		if ( ! hasPhotos ) {
+			requestOptions.headers[ 'Content-Type' ] = 'application/json';
+		}
+
+		fetch(
+			`${ wingReviewSubmitData.restUrl }${ submitPath }`,
+			requestOptions
+		)
+			.then( ( response ) =>
+				response
+					.json()
+					.then( ( data ) => ( { ok: response.ok, data } ) )
+			)
 			.then( ( { ok, data } ) => {
 				if ( ok ) {
 					showMessage(
 						'success',
-						data.message || 'Thank you! Your submission has been received and is pending review.'
+						data.message ||
+							'Thank you! Your submission has been received and is pending review.'
 					);
 					setTimeout( () => {
 						closeModal();
 					}, 2000 );
 				} else {
-					showMessage( 'error', data.message || 'Submission failed. Please try again.' );
+					showMessage(
+						'error',
+						data.message || 'Submission failed. Please try again.'
+					);
 				}
 			} )
-			.catch( ( error ) => {
-				console.error( 'Submission error:', error );
+			.catch( () => {
 				showMessage( 'error', 'An error occurred. Please try again.' );
 			} )
 			.finally( () => {
@@ -161,8 +199,12 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 		requiredFields.forEach( ( field ) => {
 			if ( field.type === 'radio' ) {
-				const radioGroup = form.querySelectorAll( `[name="${ field.name }"]` );
-				const isChecked = Array.from( radioGroup ).some( ( radio ) => radio.checked );
+				const radioGroup = form.querySelectorAll(
+					`[name="${ field.name }"]`
+				);
+				const isChecked = Array.from( radioGroup ).some(
+					( radio ) => radio.checked
+				);
 				if ( ! isChecked ) {
 					isValid = false;
 				}
@@ -180,8 +222,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		}
 
 		if ( ! isExistingPost && addressField ) {
-			if ( addressField.value.trim() && ( ! latField.value || ! lngField.value ) ) {
-				showMessage( 'error', 'Please wait for address to be geocoded or enter a valid address.' );
+			if (
+				addressField.value.trim() &&
+				( ! latField.value || ! lngField.value )
+			) {
+				showMessage(
+					'error',
+					'Please wait for address to be geocoded or enter a valid address.'
+				);
 				return false;
 			}
 		}
@@ -190,7 +238,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	}
 
 	function showMessage( type, message ) {
-		const messageContainer = document.getElementById( 'wing-form-messages' );
+		const messageContainer =
+			document.getElementById( 'wing-form-messages' );
 		const messageDiv = document.createElement( 'div' );
 		messageDiv.className = `wing-form-message wing-form-${ type }`;
 		messageDiv.textContent = message;
@@ -198,7 +247,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	}
 
 	function clearMessages() {
-		const messageContainer = document.getElementById( 'wing-form-messages' );
+		const messageContainer =
+			document.getElementById( 'wing-form-messages' );
 		messageContainer.innerHTML = '';
 		form.querySelectorAll( '.field-error' ).forEach( ( field ) => {
 			field.classList.remove( 'field-error' );

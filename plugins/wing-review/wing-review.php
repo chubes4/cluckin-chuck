@@ -95,6 +95,7 @@ function render_callback( $attributes ) {
 	$sauces_tried      = esc_html( $attributes['saucesTried'] ?? '' );
 	$wing_count        = intval( $attributes['wingCount'] ?? 0 );
 	$total_price       = floatval( $attributes['totalPrice'] ?? 0 );
+	$photo_ids         = array_values( array_filter( array_map( 'absint', $attributes['photoIds'] ?? array() ) ) );
 	$price_per_wing    = $wing_count > 0 ? round( $total_price / $wing_count, 2 ) : 0;
 
 	$full_stars  = str_repeat( '★', (int) round( $rating ) );
@@ -155,6 +156,16 @@ function render_callback( $attributes ) {
 		<?php if ( $review_text ) : ?>
 			<div class="wing-review-text"><?php echo $review_text; ?></div>
 		<?php endif; ?>
+
+		<?php if ( $photo_ids ) : ?>
+			<div class="wing-review-photos">
+				<?php foreach ( $photo_ids as $photo_id ) : ?>
+					<a href="<?php echo esc_url( wp_get_attachment_image_url( $photo_id, 'large' ) ); ?>" target="_blank" rel="noopener">
+						<?php echo wp_get_attachment_image( $photo_id, 'medium', false, array( 'loading' => 'lazy' ) ); ?>
+					</a>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -184,6 +195,21 @@ function convert_to_block( $comment_id, $status ) {
 	$sauces_tried      = get_comment_meta( $comment_id, 'wing_sauces_tried', true );
 	$wing_count        = get_comment_meta( $comment_id, 'wing_count', true );
 	$total_price       = get_comment_meta( $comment_id, 'wing_total_price', true );
+	$photo_ids         = array_values( array_filter( array_map( 'absint', (array) get_comment_meta( $comment_id, 'wing_photo_ids', true ) ) ) );
+
+	foreach ( $photo_ids as $photo_id ) {
+		update_post_meta( $photo_id, '_wing_photo_status', 'approved' );
+		wp_update_post(
+			array(
+				'ID'          => $photo_id,
+				'post_parent' => $post_id,
+			)
+		);
+	}
+
+	if ( $photo_ids && ! has_post_thumbnail( $post_id ) ) {
+		set_post_thumbnail( $post_id, $photo_ids[0] );
+	}
 
 	$block_content = serialize_block(
 		array(
@@ -199,6 +225,7 @@ function convert_to_block( $comment_id, $status ) {
 				'saucesTried'      => sanitize_text_field( $sauces_tried ),
 				'wingCount'        => intval( $wing_count ),
 				'totalPrice'       => floatval( $total_price ),
+				'photoIds'         => $photo_ids,
 			),
 		)
 	);

@@ -233,6 +233,14 @@ function render_callback() {
 						<textarea id="wing_review_text" name="wing_review_text" required></textarea>
 					</div>
 
+					<?php if ( $is_singular_location ) : ?>
+						<div class="wing-form-field">
+							<label for="wing_photos">Wing Photos</label>
+							<input type="file" id="wing_photos" name="wing_photos[]" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple>
+							<p class="field-help">Add up to 4 photos. Photos appear after your review is approved.</p>
+						</div>
+					<?php endif; ?>
+
 					<div class="wing-form-row">
 						<div class="wing-form-field">
 							<label for="wing_reviewer_name">Your Name <span class="required">*</span></label>
@@ -290,6 +298,10 @@ function create_pending_review_comment( $post_id, $data ) {
 		add_comment_meta( $comment_id, 'wing_count', $data['wing_count'] );
 		add_comment_meta( $comment_id, 'wing_total_price', $data['total_price'] );
 		add_comment_meta( $comment_id, 'wing_ppw', $data['ppw'] );
+	}
+
+	if ( ! empty( $data['photo_ids'] ) ) {
+		add_comment_meta( $comment_id, 'wing_photo_ids', $data['photo_ids'] );
 	}
 
 	return $comment_id;

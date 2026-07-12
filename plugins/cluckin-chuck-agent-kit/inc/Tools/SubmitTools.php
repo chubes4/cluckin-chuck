@@ -203,7 +203,7 @@ class SubmitTools {
 		return array(
 			'class'        => self::class,
 			'method'       => 'handle_tool_call',
-			'description'  => 'Attach an uploaded image to a wing location as its featured image. '
+			'description'  => 'Attach an uploaded image to a wing location community gallery. The first photo also becomes the featured image. '
 				. 'Use this when the user uploads a photo in chat and references a specific location. '
 				. 'IMPORTANT: chat-uploaded images are already at a public WordPress URL — do NOT ask the user to re-upload to Imgur or any external host. '
 				. 'Find the media_id from the most recent user message that has an image: it is in the message metadata under attachments[].media_id. '

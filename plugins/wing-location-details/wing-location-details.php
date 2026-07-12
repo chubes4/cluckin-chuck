@@ -86,6 +86,48 @@ function render_callback( $attributes, $content ) {
 		),
 		'https://www.google.com/maps/dir/'
 	) : '';
+	$review_blocks   = array_filter(
+		parse_blocks( (string) get_post_field( 'post_content', $post_id ) ),
+		static function ( $block ) {
+			return 'wing-review/wing-review' === ( $block['blockName'] ?? '' );
+		}
+	);
+	$sauce_values    = array();
+	$crispy_values   = array();
+
+	foreach ( $review_blocks as $review_block ) {
+		$sauce_rating = floatval( $review_block['attrs']['sauceRating'] ?? 0 );
+		$crispy_rating = floatval( $review_block['attrs']['crispinessRating'] ?? 0 );
+		if ( $sauce_rating > 0 ) {
+			$sauce_values[] = $sauce_rating;
+		}
+		if ( $crispy_rating > 0 ) {
+			$crispy_values[] = $crispy_rating;
+		}
+	}
+
+	$average_sauce = $sauce_values ? array_sum( $sauce_values ) / count( $sauce_values ) : 0;
+	$average_crispy = $crispy_values ? array_sum( $crispy_values ) / count( $crispy_values ) : 0;
+	$photo_ids = get_posts(
+		array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			'post_parent'    => $post_id,
+			'post_mime_type' => 'image',
+			'posts_per_page' => -1,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+			'fields'         => 'ids',
+		)
+	);
+	$photo_ids = array_values(
+		array_filter(
+			$photo_ids,
+			static function ( $photo_id ) {
+				return 'pending' !== get_post_meta( $photo_id, '_wing_photo_status', true );
+			}
+		)
+	);
 
 	$full_stars  = str_repeat( '★', (int) round( $average_rating ) );
 	$empty_stars = str_repeat( '☆', 5 - (int) round( $average_rating ) );
@@ -115,6 +157,15 @@ function render_callback( $attributes, $content ) {
 				<?php echo esc_html( get_ppw_display( $min_ppw, $max_ppw ) ); ?>
 			</div>
 		</div>
+
+		<?php if ( 'full' === $display_mode ) : ?>
+			<div class="wing-score-grid">
+				<div class="wing-score"><strong><?php echo esc_html( number_format( $average_rating, 1 ) ); ?></strong><span>Overall</span></div>
+				<div class="wing-score"><strong><?php echo $average_sauce ? esc_html( number_format( $average_sauce, 1 ) ) : '—'; ?></strong><span>Sauce</span></div>
+				<div class="wing-score"><strong><?php echo $average_crispy ? esc_html( number_format( $average_crispy, 1 ) ) : '—'; ?></strong><span>Crispiness</span></div>
+				<div class="wing-score"><strong><?php echo esc_html( $review_count ); ?></strong><span><?php echo esc_html( _n( 'Review', 'Reviews', $review_count, 'wing-location-details' ) ); ?></span></div>
+			</div>
+		<?php endif; ?>
 
 		<div class="wing-location-details-body">
 			<?php if ( $address ) : ?>
@@ -146,6 +197,22 @@ function render_callback( $attributes, $content ) {
 				<?php endif; ?>
 				<a class="wing-location-action" href="#wing-review-submit-section"><?php esc_html_e( 'Review This Spot', 'wing-location-details' ); ?></a>
 			</div>
+		<?php endif; ?>
+
+		<?php if ( 'full' === $display_mode && $photo_ids ) : ?>
+			<section class="wing-community-gallery" aria-labelledby="wing-gallery-title">
+				<div class="wing-section-heading">
+					<h2 id="wing-gallery-title"><?php esc_html_e( 'Community Photos', 'wing-location-details' ); ?></h2>
+					<span><?php echo esc_html( sprintf( _n( '%d photo', '%d photos', count( $photo_ids ), 'wing-location-details' ), count( $photo_ids ) ) ); ?></span>
+				</div>
+				<div class="wing-gallery-grid">
+					<?php foreach ( $photo_ids as $photo_id ) : ?>
+						<a href="<?php echo esc_url( wp_get_attachment_image_url( $photo_id, 'large' ) ); ?>" target="_blank" rel="noopener">
+							<?php echo wp_get_attachment_image( $photo_id, 'medium_large', false, array( 'loading' => 'lazy' ) ); ?>
+						</a>
+					<?php endforeach; ?>
+				</div>
+			</section>
 		<?php endif; ?>
 	</div>
 	<?php

@@ -11,10 +11,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	const map = L.map( 'wing-map' ).setView( [ 39.8283, -98.5795 ], 4 );
 
-	L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: '© OpenStreetMap contributors',
-		maxZoom: 19,
-	} ).addTo( map );
+	L.tileLayer(
+		'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+		{
+			attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+			subdomains: 'abcd',
+			maxZoom: 19,
+		}
+	).addTo( map );
 
 	const wingIcon = L.divIcon( {
 		html: '🍗',

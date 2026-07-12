@@ -91,6 +91,12 @@ function cluckin_chuck_api_submit_review_handler( WP_REST_Request $request ) {
 	if ( ! $post || 'wing_location' !== $post->post_type || 'publish' !== $post->post_status ) {
 		return new WP_Error( 'not_found', 'Published wing location not found.', array( 'status' => 404 ) );
 	}
+	if ( empty( $params['reviewer_name'] ) || ! is_email( $params['reviewer_email'] ) || empty( $params['review_text'] ) ) {
+		return new WP_Error( 'missing_fields', 'Name, a valid email, and review text are required.', array( 'status' => 400 ) );
+	}
+	if ( $params['rating'] < 1 || $params['rating'] > 5 ) {
+		return new WP_Error( 'invalid_rating', 'Rating must be between 1 and 5.', array( 'status' => 400 ) );
+	}
 
 	$photo_ids = cluckin_chuck_api_upload_review_photos( $request, $params['post_id'] );
 	if ( is_wp_error( $photo_ids ) ) {

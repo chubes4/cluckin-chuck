@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1] - 2026-07-13
+
+### Fixed
+- add explicit restaurant discovery tool
+
 ## [0.6.0] - 2026-07-13
 
 ### Added

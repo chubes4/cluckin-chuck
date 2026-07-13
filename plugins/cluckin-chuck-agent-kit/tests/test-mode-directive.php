@@ -87,7 +87,9 @@ class Test_Mode_Directive extends WP_UnitTestCase {
 		$content = $this->directive();
 		$this->assertStringContainsString( 'find_wing_restaurant', $content );
 		$this->assertStringContainsString( 'restaurant name plus any city/state context', $content );
-		$this->assertStringContainsString( 'Do not ask the user for a street address before attempting this lookup', $content );
+		$this->assertStringContainsString( 'Mandatory next tool call', $content );
+		$this->assertStringContainsString( 'Never claim geocoding is impossible without a street address', $content );
+		$this->assertStringContainsString( 'Do not ask the user for a street address until', $content );
 		$this->assertStringContainsString( 'formatted_address', $content );
 	}
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.2] - 2026-07-13
+
+### Fixed
+- require restaurant lookup before address prompt
+
 ## [0.6.1] - 2026-07-13
 
 ### Fixed

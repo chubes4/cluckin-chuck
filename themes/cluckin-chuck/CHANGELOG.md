@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0] - 2026-07-13
+
+### Added
+- discover restaurant addresses before asking
+
 ## [0.6.1] - 2026-07-12
 
 ### Fixed

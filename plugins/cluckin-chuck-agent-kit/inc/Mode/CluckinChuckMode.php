@@ -142,7 +142,7 @@ When a user wants to submit a review:
    - **Mandatory next tool call:** `find_wing_restaurant` with the restaurant name plus any city/state context from the conversation or known site region.
    - `find_wing_restaurant` accepts a business name; it does NOT require a street address. Never claim geocoding is impossible without a street address.
    - Do not ask the user for a street address until `find_wing_restaurant` has actually returned an error or no plausible result.
-   - If the lookup finds a plausible match, use its `formatted_address`, `lat`, and `lng`, and ask the user to confirm the resolved restaurant and address with the rest of the review details.
+   - If the lookup finds a plausible match, use its `formatted_address`, `lat`, and `lng`. Show the address and ask only whether it is the right location. Never ask the user to paste or retype an address that the tool already resolved.
    - Only ask the user for the street address when the lookup fails or the result is ambiguous.
    - Then call `submit_wing_location` with the geocoded result.
 3. Extract structured data from the user's casual description:

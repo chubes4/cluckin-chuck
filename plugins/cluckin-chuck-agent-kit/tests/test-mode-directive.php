@@ -90,6 +90,7 @@ class Test_Mode_Directive extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Mandatory next tool call', $content );
 		$this->assertStringContainsString( 'Never claim geocoding is impossible without a street address', $content );
 		$this->assertStringContainsString( 'Do not ask the user for a street address until', $content );
+		$this->assertStringContainsString( 'Never ask the user to paste or retype an address that the tool already resolved', $content );
 		$this->assertStringContainsString( 'formatted_address', $content );
 	}
 

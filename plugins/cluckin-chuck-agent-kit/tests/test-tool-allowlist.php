@@ -31,6 +31,7 @@ class Test_Tool_Allowlist extends WP_UnitTestCase {
 
 			// Geocoding (1).
 			'geocode_address',
+			'find_wing_restaurant',
 
 			// Public submissions (2).
 			'submit_wing_review',

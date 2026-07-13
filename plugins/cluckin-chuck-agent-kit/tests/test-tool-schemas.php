@@ -161,12 +161,18 @@ class Test_Tool_Schemas extends WP_UnitTestCase {
 		);
 	}
 
+	public function test_find_restaurant_requires_name_and_local_context() {
+		$tools = $this->tools();
+		$this->assertValidJsonSchemaShape( $tools['find_wing_restaurant'], 'find_wing_restaurant' );
+		$this->assertSame( array( 'address' ), $tools['find_wing_restaurant']['parameters']['required'] );
+	}
+
 	public function test_every_wing_tool_has_valid_json_schema() {
 		$tools = $this->tools();
 
 		$wing_tools = array(
 			'list_wing_locations', 'get_wing_location', 'update_wing_location',
-			'geocode_address', 'approve_wing_location', 'reject_wing_location',
+			'geocode_address', 'find_wing_restaurant', 'approve_wing_location', 'reject_wing_location',
 			'list_wing_reviews', 'approve_wing_review', 'reject_wing_review',
 			'recalculate_wing_stats', 'list_pending_submissions',
 			'submit_wing_review', 'submit_wing_location',

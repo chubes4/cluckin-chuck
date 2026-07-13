@@ -85,6 +85,7 @@ class Test_Mode_Directive extends WP_UnitTestCase {
 
 	public function test_directive_looks_up_restaurant_before_asking_for_address() {
 		$content = $this->directive();
+		$this->assertStringContainsString( 'find_wing_restaurant', $content );
 		$this->assertStringContainsString( 'restaurant name plus any city/state context', $content );
 		$this->assertStringContainsString( 'Do not ask the user for a street address before attempting this lookup', $content );
 		$this->assertStringContainsString( 'formatted_address', $content );

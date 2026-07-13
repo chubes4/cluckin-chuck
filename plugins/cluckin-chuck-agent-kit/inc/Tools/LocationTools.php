@@ -6,6 +6,7 @@
  *   - list_locations (public)
  *   - get_location (public)
  *   - update_location (admin)
+ *   - find_wing_restaurant (public)
  *   - geocode_address (public)
  *   - approve_wing_location (admin)
  *   - reject_wing_location (admin)
@@ -53,6 +54,11 @@ class LocationTools {
 
 		$tools['geocode_address'] = array(
 			'_callable' => $this->schema_normalized( 'get_geocode_def' ),
+			'modes'     => $modes,
+		);
+
+		$tools['find_wing_restaurant'] = array(
+			'_callable' => $this->schema_normalized( 'get_restaurant_lookup_def' ),
 			'modes'     => $modes,
 		);
 
@@ -170,6 +176,23 @@ class LocationTools {
 					'type'        => 'string',
 					'required'    => true,
 					'description' => 'A street address or restaurant name with city/state context (e.g. "Stones Throw Tavern Charleston SC").',
+				),
+			),
+		);
+	}
+
+	public function get_restaurant_lookup_def(): array {
+		return array(
+			'class'        => self::class,
+			'method'       => 'handle_tool_call',
+			'description'  => 'Find the likely canonical street address and coordinates for a restaurant. Always use this after a restaurant is not found in list_wing_locations and before asking the user for an address.',
+			'ability'      => 'cluckin-chuck/geocode-address',
+			'access_level' => 'public',
+			'parameters'   => array(
+				'address' => array(
+					'type'        => 'string',
+					'required'    => true,
+					'description' => 'Restaurant name plus city/state context (e.g. "Stones Throw Tavern Charleston SC").',
 				),
 			),
 		);

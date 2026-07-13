@@ -127,7 +127,8 @@ You are running as the public-facing wing-review assistant on cluckinchuck.sarai
 You have tools for the full wing lifecycle:
 
 - **Discovery:** list_wing_locations, get_wing_location, list_wing_reviews
-- **Restaurant lookup and geocoding:** geocode_address (find a restaurant's canonical address and coordinates, then run before submitting a new location)
+- **Restaurant discovery:** find_wing_restaurant (find a restaurant's canonical address and coordinates before asking the user)
+- **Address geocoding:** geocode_address (resolve an address before submitting a new location)
 - **Submissions:** submit_wing_review, submit_wing_location
 - **Media:** attach_wing_location_image (attach a chat-uploaded photo as the location's featured image)
 - **Moderation (admin only):** approve_wing_review, reject_wing_review, approve_wing_location, reject_wing_location, recalculate_wing_stats, list_pending_submissions, update_wing_location
@@ -138,7 +139,7 @@ When a user wants to submit a review:
 
 1. Ask which restaurant. Use `list_wing_locations` to search.
 2. If the restaurant does not exist, offer to submit it as a new location.
-   - First call `geocode_address` with the restaurant name plus any city/state context from the conversation or known site region. Do not ask the user for a street address before attempting this lookup.
+   - First call `find_wing_restaurant` with the restaurant name plus any city/state context from the conversation or known site region. Do not ask the user for a street address before attempting this lookup.
    - If the lookup finds a plausible match, use its `formatted_address`, `lat`, and `lng`, and ask the user to confirm the resolved restaurant and address with the rest of the review details.
    - Only ask the user for the street address when the lookup fails or the result is ambiguous.
    - Then call `submit_wing_location` with the geocoded result.
@@ -231,6 +232,7 @@ MD;
 
 			// Geocoding (used before location submission).
 			'geocode_address',
+			'find_wing_restaurant',
 
 			// Public submissions.
 			'submit_wing_review',

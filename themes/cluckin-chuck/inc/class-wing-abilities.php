@@ -412,7 +412,7 @@ class Wing_Abilities {
 			'cluckin-chuck/geocode-address',
 			array(
 				'label'               => __( 'Geocode Address', 'cluckin-chuck' ),
-				'description'         => __( 'Convert a street address to latitude/longitude coordinates via OpenStreetMap.', 'cluckin-chuck' ),
+				'description'         => __( 'Find a restaurant or street address and return its canonical address and coordinates via OpenStreetMap.', 'cluckin-chuck' ),
 				'category'            => 'cluckin-chuck',
 				'input_schema'        => array(
 					'type'       => 'object',
@@ -420,7 +420,7 @@ class Wing_Abilities {
 					'properties' => array(
 						'address' => array(
 							'type'        => 'string',
-							'description' => __( 'The street address to geocode.', 'cluckin-chuck' ),
+							'description' => __( 'A street address, or a restaurant name with city/state context.', 'cluckin-chuck' ),
 							'minLength'   => 1,
 						),
 					),
@@ -428,8 +428,11 @@ class Wing_Abilities {
 				'output_schema'       => array(
 					'type'       => 'object',
 					'properties' => array(
-						'lat' => array( 'type' => 'number' ),
-						'lng' => array( 'type' => 'number' ),
+						'lat'               => array( 'type' => 'number' ),
+						'lng'               => array( 'type' => 'number' ),
+						'name'              => array( 'type' => 'string' ),
+						'formatted_address' => array( 'type' => 'string' ),
+						'display_name'      => array( 'type' => 'string' ),
 					),
 				),
 				'execute_callback'    => array( $this, 'execute_geocode_address' ),

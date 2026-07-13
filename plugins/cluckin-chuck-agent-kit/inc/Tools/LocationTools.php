@@ -162,14 +162,14 @@ class LocationTools {
 		return array(
 			'class'        => self::class,
 			'method'       => 'handle_tool_call',
-			'description'  => 'Convert a street address to latitude/longitude coordinates. Use this before submitting a new wing location to get the coordinates from the address the user provides.',
+			'description'  => 'Find a restaurant by name and local context, or geocode a street address. Returns the canonical formatted address and coordinates. When a new restaurant is not already on the site, try this lookup before asking the user for its street address.',
 			'ability'      => 'cluckin-chuck/geocode-address',
 			'access_level' => 'public',
 			'parameters'   => array(
 				'address' => array(
 					'type'        => 'string',
 					'required'    => true,
-					'description' => 'The street address to geocode (e.g. "123 King St, Charleston SC").',
+					'description' => 'A street address or restaurant name with city/state context (e.g. "Stones Throw Tavern Charleston SC").',
 				),
 			),
 		);

@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * NOT cached so a corrected address can be re-attempted immediately.
  *
  * @param string $address Address to geocode.
- * @return array|false Array with 'lat' and 'lng' keys, or false on failure.
+ * @return array|false Coordinates and canonical address details, or false on failure.
  */
 function geocode_address( $address ) {
 	$address = trim( (string) $address );
@@ -42,7 +42,7 @@ function geocode_address( $address ) {
 
 		if ( false !== $result ) {
 			// Cache under the original key too so future identical lookups skip the retry.
-			set_transient( 'geocode_' . md5( $address ), $result, DAY_IN_SECONDS );
+			set_transient( 'geocode_v2_' . md5( $address ), $result, DAY_IN_SECONDS );
 			return $result;
 		}
 	}
@@ -57,7 +57,7 @@ function geocode_address( $address ) {
  * @return array|false
  */
 function geocode_address_request( $address ) {
-	$transient_key = 'geocode_' . md5( $address );
+	$transient_key = 'geocode_v2_' . md5( $address );
 	$cached        = get_transient( $transient_key );
 
 	if ( false !== $cached ) {
@@ -70,7 +70,7 @@ function geocode_address_request( $address ) {
 			'format'       => 'json',
 			'limit'        => 1,
 			'countrycodes' => 'us',
-			'addressdetails' => 0,
+			'addressdetails' => 1,
 		),
 		'https://nominatim.openstreetmap.org/search'
 	);
@@ -97,14 +97,41 @@ function geocode_address_request( $address ) {
 		return false;
 	}
 
-	$result = array(
-		'lat' => floatval( $data[0]['lat'] ),
-		'lng' => floatval( $data[0]['lon'] ),
+	$place   = $data[0];
+	$details = isset( $place['address'] ) && is_array( $place['address'] ) ? $place['address'] : array();
+	$result  = array(
+		'lat'               => floatval( $place['lat'] ),
+		'lng'               => floatval( $place['lon'] ),
+		'name'              => sanitize_text_field( $place['name'] ?? '' ),
+		'formatted_address' => format_nominatim_address( $details ),
+		'display_name'      => sanitize_text_field( $place['display_name'] ?? '' ),
 	);
 
 	set_transient( $transient_key, $result, DAY_IN_SECONDS );
 
 	return $result;
+}
+
+/**
+ * Build a concise US mailing address from Nominatim address details.
+ *
+ * @param array $details Nominatim address object.
+ * @return string
+ */
+function format_nominatim_address( array $details ) {
+	$street = trim(
+		sprintf(
+			'%s %s',
+			(string) ( $details['house_number'] ?? '' ),
+			(string) ( $details['road'] ?? $details['pedestrian'] ?? '' )
+		)
+	);
+	$city   = (string) ( $details['city'] ?? $details['town'] ?? $details['village'] ?? $details['municipality'] ?? '' );
+	$state  = (string) ( $details['state'] ?? '' );
+	$zip    = (string) ( $details['postcode'] ?? '' );
+	$region = trim( $state . ( '' !== $zip ? ' ' . $zip : '' ) );
+
+	return sanitize_text_field( implode( ', ', array_filter( array( $street, $city, $region ) ) ) );
 }
 
 /**

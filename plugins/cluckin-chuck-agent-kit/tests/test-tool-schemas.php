@@ -155,6 +155,10 @@ class Test_Tool_Schemas extends WP_UnitTestCase {
 		$tools = $this->tools();
 		$this->assertValidJsonSchemaShape( $tools['geocode_address'], 'geocode_address' );
 		$this->assertSame( array( 'address' ), $tools['geocode_address']['parameters']['required'] );
+		$this->assertStringContainsString(
+			'restaurant name',
+			$tools['geocode_address']['parameters']['properties']['address']['description']
+		);
 	}
 
 	public function test_every_wing_tool_has_valid_json_schema() {
